@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sachin Yadav | Premium Architecture & Design</title>
+  <meta name="description" content="Portfolio of Sachin Yadav, a Full-Stack Developer & AI Builder. Computer Engineering student at Saraswati College of Engineering.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Lenis for Smooth Scroll -->
+  <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+
+  <!-- GSAP & ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+  <!-- Three.js for 3D Web interactive background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- GLTFLoader for Spacecraft Model -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+</head>
+<body class="theme-dark loading">
+
+  <!-- Brutalist Loader -->
+  <div class="loader-wrapper">
+    <div class="loader-content">
+      <div class="loader-title">SYSTEM PRE-FLIGHT<br/>CHECKS</div>
+      <div class="loader-counter">000</div>
+    </div>
+    <div class="loader-progress"></div>
+  </div>
+
+  <!-- Orbital Tracker Cursor -->
+  <div class="cursor-dot" data-cursor-dot></div>
+  <div class="cursor-outline" data-cursor-outline>
+    <div class="orbit-satellite"></div>
+  </div>
+
+  <!-- Interactive 3D Web Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Gradient Overlay -->
+  <div class="bg-gradient-overlay"></div>
+
+  <!-- Global Decrypt Button -->
+  <button id="global-decode-btn" class="glass-card" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 50000; display: flex; align-items: center; gap: 0.5rem; background: rgba(0,0,0,0.8); border: 1px solid var(--text-main); color: var(--text-main); font-family: var(--font-display); font-size: 0.9rem; cursor: pointer; padding: 1rem 1.5rem; font-weight: 600;" data-magnetic>
+    <i data-lucide="binary"></i> <span>DECRYPT_SYSTEM</span>
+  </button>
+
+  <nav class="gsap-nav">
+    <div class="logo">SYS.</div>
+    <div class="nav-links">
+      <a href="#about" class="nav-link" data-magnetic data-human="About" data-decode>Origin</a>
+      <a href="#skills" class="nav-link" data-magnetic data-human="Competencies" data-decode>Subsystems</a>
+      <a href="#projects" class="nav-link" data-magnetic data-human="Selected Work" data-decode>Mission Logs</a>
+      <a href="#contact" class="nav-link" data-magnetic data-human="Contact" data-decode>Transmission</a>
+    </div>
+    <button class="menu-toggle" data-magnetic>
+      <i data-lucide="menu"></i>
+    </button>
+  </nav>
+
+  <!-- Full Screen GSAP Mobile Menu -->
+  <div class="menu-overlay">
+    <div class="menu-bg"></div>
+    <div class="menu-content">
+      <button class="menu-close" data-magnetic><i data-lucide="x"></i></button>
+      <div class="menu-links">
+        <a href="#about" class="menu-link" data-magnetic data-human="01. About" data-decode>01. Origin</a>
+        <a href="#skills" class="menu-link" data-magnetic data-human="02. Competencies" data-decode>02. Subsystems</a>
+        <a href="#projects" class="menu-link" data-magnetic data-human="03. Selected Work" data-decode>03. Mission Logs</a>
+        <a href="#contact" class="menu-link" data-magnetic data-human="04. Contact" data-decode>04. Transmission</a>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+      <div class="hero-content">
+        <p class="greeting gsap-hero-f" data-human="Hello, I'm" data-decode>[SYS_INIT] Incoming transmission...</p>
+        <h1 class="title kinetic-text">Sachin Yadav</h1>
+        <h2 class="subtitle kinetic-text-sub" data-human="Full-Stack Web &amp; AI Builder" data-decode>
+          Mission Specialist: Systems & AI
+        </h2>
+        <p class="description gsap-hero-f" data-human="2nd Year Computer Eng at SVCE. I orchestrate complex backend microservices, engineer intelligent LLM layers, and forge elite interactive frontends." data-decode>
+          Designation: 2nd Year Computer Eng at SVCE Sector. Orchestrating high-latency backend micro-clusters, engineering neural-net command layers, and forging elite interactive terminals.
+        </p>
+        <div class="cta-group gsap-hero-f">
+          <a href="#skills" class="btn btn-primary" data-magnetic>
+            <span data-human="Explore Skills" data-decode>Scan Systems</span> <i data-lucide="crosshairs"></i>
+          </a>
+          <a href="#projects" class="btn btn-secondary" data-magnetic>
+            <span data-human="View Projects" data-decode>Access Logs</span> <i data-lucide="folder-lock"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+      <div class="section-header gsap-fade">
+        <h2 class="section-title" data-human="01. Identity" data-decode>01. Origin Directive</h2>
+        <div class="line"></div>
+      </div>
+      <div class="about-grid gsap-fade">
+        <div class="about-text glass-card">
+          <p data-human="I am an engineer striving for the space where raw computational power meets flawless design. Currently pursuing my Computer Engineering degree, I bridge the gap between headless backend systems and breathtaking user spaces." data-decode>
+            Initiating background logs. Operating at the intersection of raw computational thrust and zero-gravity design. Currently docked at Saraswati College for Engineering directives, I bridge headless backend architectures with immersive visual command centers.
+          </p>
+          <p data-human="Color distracts. Motion, geometry, and strict monotone palettes speak volumes. I build for speed, scale, and extreme aesthetic impact." data-decode>
+            Visual noise is detrimental to the mission. Monotone geometry, kinetic trajectories, and strict physics algorithms ensure maximum data bandwidth and extreme aesthetic impact.
+          </p>
+        </div>
+        <div class="about-stats glass-card">
+          <div class="stat-card" data-magnetic>
+            <h3 data-human="Education" data-decode>Training Sector</h3>
+            <p data-human="Saraswati College of Engineering" data-decode>SVCE Base</p>
+            <span data-human="Computer Engineering, 2nd Year" data-decode>Computer Engineering, Year 2</span>
+          </div>
+          <div class="stat-card" data-magnetic>
+            <h3 data-human="Specialization" data-decode>Primary Directive</h3>
+            <p data-human="AI Orchestration & Architecture" data-decode>AI Orchestration & Architecture</p>
+            <span data-human="End-to-End Solutions" data-decode>End-to-End System Deployments</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills" class="skills">
+      <div class="section-header gsap-fade">
+        <h2 class="section-title" data-human="02. Competencies" data-decode>02. Subsystems</h2>
+        <div class="line"></div>
+      </div>
+      <p class="skills-intro gsap-fade" data-human="Rigorously trained in deploying intelligent systems, resilient cloud infrastructure, and immersive interfaces." data-decode>Diagnostics complete. All subsystems green. Rigorously calibrated for intelligent node deployment and resilient cloud infrastructure.</p>
+      
+      <div class="skills-container" id="skillsContainer"></div>
+    </section>
+
+    <!-- Highlighted Projects Flight Tunnel Section -->
+    <!-- 3D Orbital Navigation Section -->
+    <section id="projects" class="projects">
+      <div class="section-header gsap-fade">
+        <h2 class="section-title" data-human="03. Selected Work" data-decode>03. Mission Logs</h2>
+        <div class="line"></div>
+      </div>
+      <p class="skills-intro gsap-fade" style="margin-bottom: 3rem;" data-human="A flat grid cannot contain these systems. Engage the orbital uplink to view projects floating in three-dimensional space." data-decode>Warning: Disengaging two-dimensional viewport constraints. Engage orbital tracking to intercept telemetry payloads.</p>
+
+      <div class="launch-container gsap-fade" style="text-align: center; margin-top: 2rem;">
+        <button id="launch-showcase-btn" class="skill-key" style="font-size: 1.5rem; padding: 1.5rem 3rem;" data-magnetic>
+           <span data-human="Launch 3D Orbit" data-decode>Initiate Orbital Array</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="section-header gsap-fade">
+        <h2 class="section-title" data-human="04. Contact" data-decode>04. Transmission</h2>
+        <div class="line"></div>
+      </div>
+      <div class="contact-grid gsap-fade">
+        <div class="contact-info glass-card">
+          <h1 class="kinetic-text-small" data-human="Open To Opportunities" data-decode>Awaiting Directives</h1>
+          <p data-human="I am perpetually exploring new architectural challenges, AGI research, and high-end WebGL environments. Let's engineer something together." data-decode>Currently scanning for new architectural anomalies, AGI research vectors, and high-orbit WebGL environments. Establish an uplink to collaborate.</p>
+          
+          <div class="social-links" style="margin-top: 3rem;">
+            <a href="https://github.com/bunnybot1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
+              <i data-lucide="github"></i>
+              <span data-human="GitHub" data-decode>GitHub Core</span>
+            </a>
+            <a href="https://www.linkedin.com/in/sachinyadav1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
+              <i data-lucide="linkedin"></i>
+              <span data-human="LinkedIn" data-decode>LinkedIn Channel</span>
+            </a>
+            <a href="mailto:Sachinyadav402107@gmail.com" class="social-icon" data-magnetic>
+              <i data-lucide="mail"></i>
+              <span data-human="Email" data-decode>Comms Frequency</span>
+            </a>
+          </div>
+        </div>
+
+        <form class="contact-form glass-card" onsubmit="event.preventDefault();">
+          <div class="input-group">
+            <input type="text" id="name" required placeholder=" " />
+            <label for="name" data-human="Your Designation" data-decode>[IDENTIFIER: Callsign / Designation]</label>
+          </div>
+          <div class="input-group">
+            <input type="email" id="email" required placeholder=" " />
+            <label for="email" data-human="Terminal Protocol (Email)" data-decode>[COMM-LINK: Routing Protocol]</label>
+          </div>
+          <div class="input-group">
+            <textarea id="message" rows="4" required placeholder=" "></textarea>
+            <label for="message" data-human="Transmission Data" data-decode>[PAYLOAD: Message Data]</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-huge" style="width: 100%" data-magnetic>
+            <span data-human="Submit Sequence" data-decode>Transmit Payload</span> <i data-lucide="send"></i>
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="gsap-fade">
+    <p>&copy; <span id="year"></span> Sachin Yadav. Formulated through pure mathematics, kinetic typography, and WebGL physics.</p>
+  </footer>
+
+  <!-- 3D SHOWCASE HUD (Holographic Overlay) -->
+  <div id="project-hud" class="hud-overlay" style="display: none; opacity: 0;">
+    <button id="close-hud-btn" class="skill-key hud-close" data-magnetic>Close HUD</button>
+    <button id="exit-orbit-btn" class="skill-key hud-exit" data-magnetic>Abort Orbit</button>
+    
+    <div class="hud-content glass-card">
+      <div class="project-gallery hud-gallery">
+        <div id="hud-gallery-track" class="gallery-track">
+          <!-- Images injected via JS -->
+        </div>
+      </div>
+      <div class="project-info">
+        <h3 id="hud-title" class="project-title">Project Name</h3>
+        <p id="hud-link" class="project-link">example.com</p>
+        <div id="hud-tags" class="tech-tags">
+          <!-- Tags injected via JS -->
+        </div>
+        <div class="project-actions">
+          <a id="hud-deploy-btn" href="#" target="_blank" class="skill-key" data-magnetic>Access System</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.PROJECT_DATA = {
+      "proj_municipal": {
+        title: "Municipal Command",
+        link: "rnunicipal.vercel.app",
+        url: "https://rnunicipal.vercel.app",
+        images: [
+           "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1614064641913-6b714bca3c19?q=80&w=800&auto=format&fit=crop"
+        ],
+        tags: ["React", "IoT Telemetry", "Geospatial / Leaflet"]
+      },
+      "proj_citizens": {
+        title: "Citizens App",
+        link: "citizenz.vercel.app",
+        url: "https://citizenz.vercel.app",
+        images: [
+           "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop"
+        ],
+        tags: ["Neumorphic UI", "City Reporting", "PWA Config"]
+      },
+      "proj_fieldstaff": {
+        title: "FieldStaff App",
+        link: "fieldstaff.vercel.app",
+        url: "https://fieldstaff.vercel.app",
+        images: [
+           "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&auto=format&fit=crop"
+        ],
+        tags: ["Next.js Mobile", "Task Tracking", "Real-Time Sync"]
+      },
+      "proj_uivault": {
+        title: "UI Vault V2 Neo",
+        link: "uivault1121.vercel.app",
+        url: "https://uivault1121.vercel.app",
+        images: [
+           "https://images.unsplash.com/photo-1618761714954-0b8cd0026356?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop"
+        ],
+        tags: ["Design System", "Masonry Grid", "Component Library"]
+      },
+      "proj_bughunt": {
+        title: "BugHunt Tracker",
+        link: "bughunt1121.vercel.app",
+        url: "https://bughunt1121.vercel.app",
+        images: [
+           "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=800&auto=format&fit=crop"
+        ],
+        tags: ["Algorithm Trainer", "LeetCode Engine", "React"]
+      },
+      "proj_cafe": {
+        title: "929 King Cafe",
+        link: "v0-929kingscafe.vercel.app",
+        url: "https://v0-929kingscafe.vercel.app/",
+        images: [
+           "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop",
+           "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800&auto=format&fit=crop"
+        ],
+        tags: ["Restaurant UI", "Photography", "Vercel"]
+      },
+      "proj_goted": {
+         title: "The Goted",
+         link: "goted.vercel.app",
+         url: "https://goted.vercel.app",
+         images: [
+            "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?q=80&w=800&auto=format&fit=crop"
+         ],
+         tags: ["Neo-Brutalism", "Productivity", "Mindmaps"]
+      }
+    };
+  </script>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="section-header gsap-fade">
+        <h2 class="section-title" data-human="04. Contact" data-decode>04. Transmission</h2>
+        <div class="line"></div>
+      </div>
+      <div class="contact-grid gsap-fade">
+        <div class="contact-info glass-card">
+          <h1 class="kinetic-text-small" data-human="Open To Opportunities" data-decode>Awaiting Directives</h1>
+          <p data-human="I am perpetually exploring new architectural challenges, AGI research, and high-end WebGL environments. Let's engineer something together." data-decode>Currently scanning for new architectural anomalies, AGI research vectors, and high-orbit WebGL environments. Establish an uplink to collaborate.</p>
+          
+          <div class="social-links" style="margin-top: 3rem;">
+            <a href="https://github.com/bunnybot1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
+              <i data-lucide="github"></i>
+              <span data-human="GitHub" data-decode>GitHub Core</span>
+            </a>
+            <a href="https://www.linkedin.com/in/sachinyadav1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
+              <i data-lucide="linkedin"></i>
+              <span data-human="LinkedIn" data-decode>LinkedIn Channel</span>
+            </a>
+            <a href="mailto:Sachinyadav402107@gmail.com" class="social-icon" data-magnetic>
+              <i data-lucide="mail"></i>
+              <span data-human="Email" data-decode>Comms Frequency</span>
+            </a>
+          </div>
+        </div>
+
+        <form class="contact-form glass-card" onsubmit="event.preventDefault();">
+          <div class="input-group">
+            <input type="text" id="name" required placeholder=" " />
+            <label for="name" data-human="Your Designation" data-decode>[IDENTIFIER: Callsign / Designation]</label>
+          </div>
+          <div class="input-group">
+            <input type="email" id="email" required placeholder=" " />
+            <label for="email" data-human="Terminal Protocol (Email)" data-decode>[COMM-LINK: Routing Protocol]</label>
+          </div>
+          <div class="input-group">
+            <textarea id="message" rows="4" required placeholder=" "></textarea>
+            <label for="message" data-human="Transmission Data" data-decode>[PAYLOAD: Message Data]</label>
+          </div>
+          <button type="submit" class="btn btn-primary btn-huge" style="width: 100%" data-magnetic>
+            <span data-human="Submit Sequence" data-decode>Transmit Payload</span> <i data-lucide="send"></i>
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="gsap-fade">
+    <p>&copy; <span id="year"></span> Sachin Yadav. Formulated through pure mathematics, kinetic typography, and WebGL physics.</p>
+  </footer>
+
+
+
+  <script src="script.js"></script>
+  <script>
+    lucide.createIcons();
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
