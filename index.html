@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="ProfileCard.css">
   
   <!-- Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -81,7 +82,6 @@
   </div>
 
   <main>
-    <!-- Hero Section -->
     <section id="hero" class="hero">
       <div class="hero-content">
         <p class="greeting gsap-hero-f" data-human="Hello, I'm" data-decode>[SYS_INIT] Incoming transmission...</p>
@@ -157,84 +157,11 @@
         <button id="launch-showcase-btn" class="skill-key" style="font-size: 1.5rem; padding: 1.5rem 3rem;" data-magnetic>
            <span data-human="Launch 3D Orbit" data-decode>Initiate Orbital Array</span>
         </button>
+        <button id="exit-orbit-btn" class="skill-key" style="font-size: 1.2rem; padding: 1rem 2rem; position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 9000; opacity: 0; pointer-events: none;" data-magnetic>
+           Abort Orbit
+        </button>
       </div>
     </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-      <div class="section-header gsap-fade">
-        <h2 class="section-title" data-human="04. Contact" data-decode>04. Transmission</h2>
-        <div class="line"></div>
-      </div>
-      <div class="contact-grid gsap-fade">
-        <div class="contact-info glass-card">
-          <h1 class="kinetic-text-small" data-human="Open To Opportunities" data-decode>Awaiting Directives</h1>
-          <p data-human="I am perpetually exploring new architectural challenges, AGI research, and high-end WebGL environments. Let's engineer something together." data-decode>Currently scanning for new architectural anomalies, AGI research vectors, and high-orbit WebGL environments. Establish an uplink to collaborate.</p>
-          
-          <div class="social-links" style="margin-top: 3rem;">
-            <a href="https://github.com/bunnybot1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
-              <i data-lucide="github"></i>
-              <span data-human="GitHub" data-decode>GitHub Core</span>
-            </a>
-            <a href="https://www.linkedin.com/in/sachinyadav1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
-              <i data-lucide="linkedin"></i>
-              <span data-human="LinkedIn" data-decode>LinkedIn Channel</span>
-            </a>
-            <a href="mailto:Sachinyadav402107@gmail.com" class="social-icon" data-magnetic>
-              <i data-lucide="mail"></i>
-              <span data-human="Email" data-decode>Comms Frequency</span>
-            </a>
-          </div>
-        </div>
-
-        <form class="contact-form glass-card" onsubmit="event.preventDefault();">
-          <div class="input-group">
-            <input type="text" id="name" required placeholder=" " />
-            <label for="name" data-human="Your Designation" data-decode>[IDENTIFIER: Callsign / Designation]</label>
-          </div>
-          <div class="input-group">
-            <input type="email" id="email" required placeholder=" " />
-            <label for="email" data-human="Terminal Protocol (Email)" data-decode>[COMM-LINK: Routing Protocol]</label>
-          </div>
-          <div class="input-group">
-            <textarea id="message" rows="4" required placeholder=" "></textarea>
-            <label for="message" data-human="Transmission Data" data-decode>[PAYLOAD: Message Data]</label>
-          </div>
-          <button type="submit" class="btn btn-primary btn-huge" style="width: 100%" data-magnetic>
-            <span data-human="Submit Sequence" data-decode>Transmit Payload</span> <i data-lucide="send"></i>
-          </button>
-        </form>
-      </div>
-    </section>
-  </main>
-
-  <footer class="gsap-fade">
-    <p>&copy; <span id="year"></span> Sachin Yadav. Formulated through pure mathematics, kinetic typography, and WebGL physics.</p>
-  </footer>
-
-  <!-- 3D SHOWCASE HUD (Holographic Overlay) -->
-  <div id="project-hud" class="hud-overlay" style="display: none; opacity: 0;">
-    <button id="close-hud-btn" class="skill-key hud-close" data-magnetic>Close HUD</button>
-    <button id="exit-orbit-btn" class="skill-key hud-exit" data-magnetic>Abort Orbit</button>
-    
-    <div class="hud-content glass-card">
-      <div class="project-gallery hud-gallery">
-        <div id="hud-gallery-track" class="gallery-track">
-          <!-- Images injected via JS -->
-        </div>
-      </div>
-      <div class="project-info">
-        <h3 id="hud-title" class="project-title">Project Name</h3>
-        <p id="hud-link" class="project-link">example.com</p>
-        <div id="hud-tags" class="tech-tags">
-          <!-- Tags injected via JS -->
-        </div>
-        <div class="project-actions">
-          <a id="hud-deploy-btn" href="#" target="_blank" class="skill-key" data-magnetic>Access System</a>
-        </div>
-      </div>
-    </div>
-  </div>
   <script>
     window.PROJECT_DATA = {
       "proj_municipal": {
@@ -324,24 +251,13 @@
         <div class="line"></div>
       </div>
       <div class="contact-grid gsap-fade">
-        <div class="contact-info glass-card">
-          <h1 class="kinetic-text-small" data-human="Open To Opportunities" data-decode>Awaiting Directives</h1>
-          <p data-human="I am perpetually exploring new architectural challenges, AGI research, and high-end WebGL environments. Let's engineer something together." data-decode>Currently scanning for new architectural anomalies, AGI research vectors, and high-orbit WebGL environments. Establish an uplink to collaborate.</p>
-          
-          <div class="social-links" style="margin-top: 3rem;">
-            <a href="https://github.com/bunnybot1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
-              <i data-lucide="github"></i>
-              <span data-human="GitHub" data-decode>GitHub Core</span>
-            </a>
-            <a href="https://www.linkedin.com/in/sachinyadav1121" target="_blank" rel="noopener noreferrer" class="social-icon" data-magnetic>
-              <i data-lucide="linkedin"></i>
-              <span data-human="LinkedIn" data-decode>LinkedIn Channel</span>
-            </a>
-            <a href="mailto:Sachinyadav402107@gmail.com" class="social-icon" data-magnetic>
-              <i data-lucide="mail"></i>
-              <span data-human="Email" data-decode>Comms Frequency</span>
-            </a>
-          </div>
+        <div class="contact-profile" style="display: flex; justify-content: center; align-items: center; width: 100%; position: relative; z-index: 10;">
+          <profile-card style="display: block; width: 100%; max-width: 420px; min-height: 520px;" 
+            avatar-url="assets/sachin_profile.jpg" 
+            linkedin-url="https://www.linkedin.com/in/sachinyadav1121"
+            github-url="https://github.com/bunnybot1121"
+            gmail-url="mailto:Sachinyadav402107@gmail.com">
+          </profile-card>
         </div>
 
         <form class="contact-form glass-card" onsubmit="event.preventDefault();">
@@ -371,7 +287,28 @@
 
 
 
+  <!-- Full Screen Project HUD -->
+  <div id="project-hud" class="project-hud">
+     <button id="close-hud-btn" class="glass-card" data-magnetic><i data-lucide="x"></i></button>
+     
+     <div class="hud-main">
+        <div class="hud-info">
+           <h2 id="hud-title" class="kinetic-text">Project Title</h2>
+           <a id="hud-deploy-btn" href="#" target="_blank" class="glass-card deploy-btn" data-magnetic>
+             <span id="hud-link">deploy.system</span> <i data-lucide="external-link"></i>
+           </a>
+           <div id="hud-tags" class="hud-tags"></div>
+        </div>
+        <div class="hud-gallery">
+           <div class="hud-gallery-track" id="hud-gallery-track">
+               <!-- Images injected here -->
+           </div>
+        </div>
+     </div>
+  </div>
+
   <script src="script.js"></script>
+  <script src="ProfileCard.js"></script>
   <script>
     lucide.createIcons();
     document.getElementById('year').textContent = new Date().getFullYear();

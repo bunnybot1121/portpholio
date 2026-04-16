@@ -1,157 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-  // ---------- 0. AUDIO ENGINE (WEB AUDIO API) ---------- //
-  class AudioEngine {
-    constructor() {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this.initialized = false;
-      this.masterGain = this.ctx.createGain();
-      this.masterGain.gain.value = 0.5;
-      this.masterGain.connect(this.ctx.destination);
-      
-      // Drone
-      this.droneOsc = null;
-      this.droneGain = this.ctx.createGain();
-      this.droneGain.gain.value = 0;
-      this.droneGain.connect(this.masterGain);
-
-      // Thruster
-      this.thrusterFilter = this.ctx.createBiquadFilter();
-      this.thrusterFilter.type = 'lowpass';
-      this.thrusterFilter.frequency.value = 400;
-      this.thrusterGain = this.ctx.createGain();
-      this.thrusterGain.gain.value = 0;
-      this.thrusterFilter.connect(this.thrusterGain);
-      this.thrusterGain.connect(this.masterGain);
-      this.thrusterSrc = null;
-    }
-
-    init() {
-      if (this.initialized) return;
-      this.ctx.resume();
-      this.initialized = true;
-
-      // "Pleasant" deep space breeze / ethereal ambient wind
-      const breezeBufferSize = this.ctx.sampleRate * 2;
-      const breezeBuffer = this.ctx.createBuffer(1, breezeBufferSize, this.ctx.sampleRate);
-      const breezeData = breezeBuffer.getChannelData(0);
-      for (let i = 0; i < breezeBufferSize; i++) {
-        breezeData[i] = Math.random() * 2 - 1; 
-      }
-      
-      this.breezeSource = this.ctx.createBufferSource();
-      this.breezeSource.buffer = breezeBuffer;
-      this.breezeSource.loop = true;
-      
-      this.breezeFilter = this.ctx.createBiquadFilter();
-      this.breezeFilter.type = 'bandpass';
-      this.breezeFilter.Q.value = 1.0; // Soft whistling wind resonance
-      this.breezeFilter.frequency.value = 350; // Base frequency
-      
-      // Organic LFO to sweep the frequency slowly
-      const breezeLfo = this.ctx.createOscillator();
-      breezeLfo.type = 'sine';
-      breezeLfo.frequency.value = 0.05; // 20-second sweep
-      const breezeLfoGain = this.ctx.createGain();
-      breezeLfoGain.gain.value = 250; 
-      breezeLfo.connect(breezeLfoGain);
-      breezeLfoGain.connect(this.breezeFilter.frequency);
-      
-      this.breezeSource.connect(this.breezeFilter);
-      this.breezeFilter.connect(this.droneGain);
-      
-      this.breezeSource.start();
-      breezeLfo.start();
-      
-      // Keep background pad extremely soft and pleasant
-      this.droneGain.gain.setTargetAtTime(0.04, this.ctx.currentTime, 5);
-
-      // Noise generator for thrusters
-      const bufferSize = this.ctx.sampleRate * 2;
-      const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const output = noiseBuffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-      this.thrusterSrc = this.ctx.createBufferSource();
-      this.thrusterSrc.buffer = noiseBuffer;
-      this.thrusterSrc.loop = true;
-      this.thrusterSrc.connect(this.thrusterFilter);
-      this.thrusterSrc.start();
-    }
-
-    playBlip() {
-      if (!this.initialized) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.1);
-      
-      gain.gain.setValueAtTime(0, this.ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.2, this.ctx.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-      
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.2);
-    }
-
-    playClick() {
-      if (!this.initialized) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.1);
-      
-      gain.gain.setValueAtTime(0, this.ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
-      
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.1);
-    }
-
-    playTick() {
-      if (!this.initialized) return;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-      
-      gain.gain.setValueAtTime(0, this.ctx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.05, this.ctx.currentTime + 0.005);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-      
-      osc.connect(gain);
-      gain.connect(this.masterGain);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.05);
-    }
-
-    setThruster(intensity) {
-      if (!this.initialized) return;
-      // Make it sound like a pleasant high-speed wind/plasma thrust when scrolling
-      const targetGain = intensity * 0.4;
-      const targetFreq = 400 + (intensity * 3000); // Opens filter sharply on fast scroll
-      
-      this.thrusterGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.2);
-      this.thrusterFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.2);
-    }
-  }
-
-  const audio = new AudioEngine();
-  
-  // Init audio on first interaction
-  const initAudio = () => { audio.init(); };
-  document.body.addEventListener('click', initAudio, { once: true });
-  document.body.addEventListener('wheel', initAudio, { once: true });
-  // Add global click sound
-  window.addEventListener('mousedown', () => audio.playClick());
+  // ---------- 0. AUDIO ENGINE (REMOVED) ---------- //
+  // The AudioEngine has been intentionally removed as requested.
+  const audio = {
+    setThruster: () => {},
+    playBlip: () => {},
+    playClick: () => {}
+  };
 
   // ---------- 1. LENIS SMOOTH SCROLL ---------- //
   const lenis = new Lenis({
@@ -635,11 +490,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.isOrbitMode) {
       group.rotation.x += 0.05 * (targetY - group.rotation.x) + (scrollVelocity * 0.0005);
       group.rotation.y += 0.05 * (targetX - group.rotation.y) + (scrollVelocity * 0.0005);
+      // Constant orbit
+      group.rotation.y += 0.001;
+      group.rotation.z += 0.0005;
+    } else {
+      // Freeze the galactic background smoothly into a steady forward-facing grid!
+      group.rotation.x += (0 - group.rotation.x) * 0.05;
+      group.rotation.y += (0 - group.rotation.y) * 0.05;
+      group.rotation.z += (0 - group.rotation.z) * 0.05;
     }
-    
-    // Constant orbit
-    group.rotation.y += 0.001;
-    group.rotation.z += 0.0005;
 
     // Bank the spaceship model slightly with mouse
     if(spaceshipModel) {
@@ -648,37 +507,66 @@ document.addEventListener('DOMContentLoaded', () => {
          spaceshipModel.rotation.x = -(targetY * 0.5);
          spaceshipModel.position.z = 750 + (Math.abs(scrollVelocity) * 0.8);
        } else {
-         // In orbit mode, strict pursuit banking
-         spaceshipModel.rotation.z -= (spaceshipModel.rotation.z + (targetX * 0.8)) * 0.1;
-         spaceshipModel.rotation.x -= (spaceshipModel.rotation.x - (targetY * 0.5)) * 0.1;
+         // In orbit mode, tilted down to perfectly showcase the rear/top chassis (Arcade POV)
+         spaceshipModel.rotation.z -= spaceshipModel.rotation.z * 0.1;
+         spaceshipModel.rotation.x += (0.25 - spaceshipModel.rotation.x) * 0.1;
        }
-       spaceshipModel.rotation.y = 0; 
-       
        const time = Date.now() * 0.001;
-       spaceshipModel.position.y = -20 + Math.sin(time * 2) * 5; 
-       if(!window.isOrbitMode) spaceshipModel.rotation.z += Math.sin(time * 4) * 0.02; 
-       spaceshipModel.position.x = Math.cos(time * 1.5) * 3; 
+       if(!window.isOrbitMode) {
+           spaceshipModel.position.y = -20 + Math.sin(time * 2) * 5; 
+           spaceshipModel.rotation.z += Math.sin(time * 4) * 0.02; 
+           spaceshipModel.position.x = Math.cos(time * 1.5) * 3;
+           spaceshipModel.rotation.y += (0 - spaceshipModel.rotation.y) * 0.1;
+       } else {
+           // Locked rigidly to the center viewport with an energetic up/down pulse bob
+           spaceshipModel.position.x += (0 - spaceshipModel.position.x) * 0.1;
+           const targetY = -25 + Math.sin(time * 3) * 1.5;
+           spaceshipModel.position.y += (targetY - spaceshipModel.position.y) * 0.1;
+           // Face the rear to the camera for an authentic space-fighter POV!
+           spaceshipModel.rotation.y += (Math.PI - spaceshipModel.rotation.y) * 0.1;
+       }
 
-       // --- TRIANGULAR V-FORMATION LOGIC ---
+       // --- HYPER-STREAM WARP TUNNEL ---
        if (window.isOrbitMode && window.projectNodes) {
-          window.projectNodes.forEach(node => {
-             // targetX, Y, Z are local to the spaceship's heading
-             const shipEuler = spaceshipModel.rotation;
-             const offset = new THREE.Vector3(node.userData.targetX, node.userData.targetY, node.userData.targetZ);
-             offset.applyEuler(shipEuler);
+          window.projectNodes.forEach((node, i) => {
+             let isHovered = (node.material.opacity === 1.0);
+             let speed = isHovered ? 0 : 3 + (i % 2); // Significantly slowed down varying speeds
              
-             const targetWorldX = spaceshipModel.position.x + offset.x;
-             const targetWorldY = spaceshipModel.position.y + offset.y;
-             const targetWorldZ = spaceshipModel.position.z + offset.z;
-             
-             // Smoothly spring into position
-             node.position.x += (targetWorldX - node.position.x) * 0.1;
-             node.position.y += (targetWorldY - node.position.y) * 0.1;
-             node.position.z += (targetWorldZ - node.position.z) * 0.1;
-
-             // Ensure the node faces the camera perfectly
-             node.rotation.copy(spaceshipModel.rotation);
-             node.rotation.y += Math.PI; // So they face +Z (towards the camera)
+             if (!isHovered) {
+                 // Move forward at high speed
+                 node.position.z += speed;
+                 
+                 // Elegant bobbing
+                 node.position.y += Math.sin(Date.now() * 0.002 + i) * 0.2;
+                 
+                 // If passed camera, respawn deep in the warp tunnel
+                 if (node.position.z > camera.position.z + 100) {
+                     node.position.z = camera.position.z - 5000;
+                     // Randomize position subtly on respawn
+                     const isLeft = Math.random() > 0.5;
+                     node.position.x = isLeft ? (-160 - Math.random() * 40) : (160 + Math.random() * 40);
+                     node.position.y = (Math.random() - 0.5) * 80;
+                     node.rotation.y = isLeft ? 0.2 : -0.2;
+                     node.userData.baseRotY = node.rotation.y;
+                 }
+                 
+                 // Aerodynamic forward-facing angle
+                 node.rotation.set(0, node.userData.baseRotY || 0, 0);
+                 
+                 // Slowly bank into the tunnel based on distance
+                 node.rotation.z = Math.sin(node.position.z * 0.001) * -0.05;
+             } else {
+                 // Magnetic Inspection Hover - Lock front and center!
+                 const targetZ = camera.position.z - 160;
+                 const targetY = camera.position.y;
+                 const targetX = camera.position.x;
+                 
+                 node.position.x += (targetX - node.position.x) * 0.15;
+                 node.position.y += (targetY - node.position.y) * 0.15;
+                 node.position.z += (targetZ - node.position.z) * 0.15;
+                 
+                 node.quaternion.slerp(camera.quaternion, 0.2);
+             }
           });
        }
     }
@@ -773,54 +661,99 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- 7.5 ORBITAL SHOWCASE LOGIC ---------- //
   const raycaster = new THREE.Raycaster();
   const mouseVec = new THREE.Vector2();
+
+  const hudOverlay = document.getElementById('project-hud');
+  const hudCloseBtn = document.getElementById('close-hud-btn');
+  const hudExitBtn = document.getElementById('exit-orbit-btn');
+  const launchBtn = document.getElementById('launch-showcase-btn');
+
+  if (launchBtn) {
+    launchBtn.addEventListener('click', () => {
+      lenis.stop(); // Stop scroll
+      document.body.style.overflow = 'hidden';
+      // Fade out the surrounding text
+      gsap.to('.projects .skills-intro, .launch-container', { opacity: 0, duration: 1, pointerEvents: 'none' });
+      // Show Exit button
+      if (hudExitBtn) gsap.to(hudExitBtn, { opacity: 1, pointerEvents: 'auto', duration: 1, delay: 0.5 });
+      
+      window.isOrbitMode = true;
+      if(spaceshipModel) {
+          // Dive the camera deeply, zooming the plane closer exactly as requested (adjusted down slightly)
+          gsap.to(camera.position, { z: 350, y: -10, duration: 2.5, ease: "power3.inOut" });
+          gsap.to(spaceshipModel.position, { z: 180, duration: 2.5, ease: "power3.inOut" });
+      }
+
+      // Fade in the project arrays only once orbital mode has explicitly launched
+      window.projectNodes.forEach(node => {
+         gsap.to(node.material, { opacity: node.userData.baseOpacity, duration: 1, delay: 0.5 });
+      });
+    });
+  }
+
+  // Global `window.PROJECT_DATA` is inherited from index.html which contains the full project configurations.
+  // This ensures a centralized single source of truth for the orbital nodes.
   
   function initOrbitNodes() {
-    // The user explicitly requested to remove the wireframe boxes and shapes.
-    // We leave this empty and await further instructions on what geometry to add.
     window.projectNodes = [];
+    if (!window.PROJECT_DATA) return;
+    const projectKeys = Object.keys(window.PROJECT_DATA);
+    
+    // Virtual expansion: Endless stream of data cores
+    let displayKeys = [];
+    while(displayKeys.length < 14) {
+       displayKeys = displayKeys.concat(projectKeys);
+    }
+    
+    displayKeys.forEach((key, index) => {
+       const data = window.PROJECT_DATA[key];
+       let texture = null;
+       if (data.images && data.images[0]) {
+           const loader = new THREE.TextureLoader();
+           loader.setCrossOrigin('anonymous');
+           texture = loader.load(data.images[0]);
+       }
+       
+       // Sleek flat holographic rectangular data slabs
+       const boxGeo = new THREE.PlaneGeometry(130, 75); 
+       
+       const material = new THREE.MeshBasicMaterial({
+          color: 0x88dddd, 
+          map: texture,
+          transparent: true,
+          opacity: 0 
+       });
+       
+       const mesh = new THREE.Mesh(boxGeo, material);
+       
+       // High-end glowing cyber wireframe outline
+       const edges = new THREE.EdgesGeometry(boxGeo);
+       const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0 });
+       const line = new THREE.LineSegments(edges, edgeMaterial);
+       mesh.add(line);
+       
+       mesh.userData.edgeLine = line;
+       mesh.userData.id = key;
+       mesh.userData.baseOpacity = 0.6; // Slightly more visible for warp effect
+       
+       const isLeft = index % 2 === 0;
+       const spreadX = 160 + Math.random() * 40;
+       mesh.position.x = isLeft ? -spreadX : spreadX;
+       mesh.position.y = (Math.random() - 0.5) * 80;
+       mesh.position.z = -1000 - (index * 400);
+       
+       mesh.rotation.y = isLeft ? 0.2 : -0.2;
+       mesh.userData.baseRotY = mesh.rotation.y;
+       
+       // Removed errant position.set
+       window.projectNodes.push(mesh);
+       group.add(mesh);
+    });
   }
   
   initOrbitNodes();
 
-  const launchBtn = document.getElementById('launch-showcase-btn');
-  if(launchBtn) {
-     launchBtn.addEventListener('click', () => {
-        window.isOrbitMode = true;
-        audio.playBlip();
-        
-        // Hide UI
-        gsap.to('.projects .skills-intro, .launch-container', { opacity: 0, duration: 0.5, pointerEvents: 'none' });
-        
-        // Swoop Camera Behind Spaceship
-        gsap.to(camera.position, {
-          x: 0,
-          y: 40,
-          z: 1050,
-          duration: 3,
-          ease: "power3.inOut"
-        });
-        
-        gsap.to(camera.rotation, {
-          x: -0.1,
-          duration: 3,
-          ease: "power3.inOut"
-        });
-        
-        // Push the spaceship forward slightly
-        if(spaceshipModel) {
-           gsap.to(spaceshipModel.position, { z: 650, duration: 3, ease: "power3.inOut" });
-           gsap.to(spaceshipModel.rotation, { x: 0.1, duration: 3, ease: "power3.inOut" });
-        }
-        
-        // Fade in Orbiters
-        window.projectNodes.forEach(node => {
-           gsap.to(node.material, { opacity: node.userData.baseOpacity, duration: 2, delay: 1 });
-        });
-        
-        lenis.stop();
-        document.body.style.overflow = 'hidden';
-     });
-  }
+  // (ScrollTrigger for orbit mode has been completely unhooked. 
+  // It now relies absolutely on the 'Initiate Orbital Array' command.)
 
   // Handle Raycasting Hover
   window.addEventListener('mousemove', (e) => {
@@ -831,16 +764,18 @@ document.addEventListener('DOMContentLoaded', () => {
         raycaster.setFromCamera(mouseVec, camera);
         const intersects = raycaster.intersectObjects(window.projectNodes);
         
-        // Reset all
+        // Smoothly fade back inactive projects
         window.projectNodes.forEach(n => {
-           n.material.color.setHex(0x00ffff);
+           n.material.color.setHex(0x88dddd); // Premium baseline cyan
            n.material.opacity = n.userData.baseOpacity;
+           if(n.userData.edgeLine) n.userData.edgeLine.material.opacity = 0.3; // subtle glow
         });
         
         if (intersects.length > 0) {
            const node = intersects[0].object;
-           node.material.color.setHex(0xffffff);
+           node.material.color.setHex(0xffffff); // Pop pure white on hover
            node.material.opacity = 1.0;
+           if(node.userData.edgeLine) node.userData.edgeLine.material.opacity = 1.0; // intense glow!
         }
      }
   });
@@ -859,10 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
      }
   });
 
-  const hudOverlay = document.getElementById('project-hud');
-  const hudCloseBtn = document.getElementById('close-hud-btn');
-  const hudExitBtn = document.getElementById('exit-orbit-btn');
-  
+
   function openHUD(id) {
      const data = window.PROJECT_DATA[id];
      if(!data) return;
@@ -904,6 +836,9 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.playClick();
         hudOverlay.classList.remove('active');
         window.isOrbitMode = false;
+        
+        // Hide Exit Button
+        gsap.to(hudExitBtn, { opacity: 0, pointerEvents: 'none', duration: 0.5 });
         
         // Restore UI
         gsap.to('.projects .skills-intro, .launch-container', { opacity: 1, duration: 1, pointerEvents: 'auto' });
