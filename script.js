@@ -1,5 +1,8 @@
+window.onerror = function(msg, url, line) { 
+  const el = document.querySelector('.loader-title');
+  if(el) el.innerText = "ERR: " + msg + " L:" + line; 
+};
 document.addEventListener('DOMContentLoaded', () => {
-
   // ---------- 0. AUDIO ENGINE (REMOVED) ---------- //
   // The AudioEngine has been intentionally removed as requested.
   const audio = {
@@ -525,54 +528,12 @@ document.addEventListener('DOMContentLoaded', () => {
            // Face the rear to the camera for an authentic space-fighter POV!
            spaceshipModel.rotation.y += (Math.PI - spaceshipModel.rotation.y) * 0.1;
        }
-
-       // --- HYPER-STREAM WARP TUNNEL ---
-       if (window.isOrbitMode && window.projectNodes) {
-          window.projectNodes.forEach((node, i) => {
-             let isHovered = (node.material.opacity === 1.0);
-             let speed = isHovered ? 0 : 3 + (i % 2); // Significantly slowed down varying speeds
-             
-             if (!isHovered) {
-                 // Move forward at high speed
-                 node.position.z += speed;
-                 
-                 // Elegant bobbing
-                 node.position.y += Math.sin(Date.now() * 0.002 + i) * 0.2;
-                 
-                 // If passed camera, respawn deep in the warp tunnel
-                 if (node.position.z > camera.position.z + 100) {
-                     node.position.z = camera.position.z - 5000;
-                     // Randomize position subtly on respawn
-                     const isLeft = Math.random() > 0.5;
-                     node.position.x = isLeft ? (-160 - Math.random() * 40) : (160 + Math.random() * 40);
-                     node.position.y = (Math.random() - 0.5) * 80;
-                     node.rotation.y = isLeft ? 0.2 : -0.2;
-                     node.userData.baseRotY = node.rotation.y;
-                 }
-                 
-                 // Aerodynamic forward-facing angle
-                 node.rotation.set(0, node.userData.baseRotY || 0, 0);
-                 
-                 // Slowly bank into the tunnel based on distance
-                 node.rotation.z = Math.sin(node.position.z * 0.001) * -0.05;
-             } else {
-                 // Magnetic Inspection Hover - Lock front and center!
-                 const targetZ = camera.position.z - 160;
-                 const targetY = camera.position.y;
-                 const targetX = camera.position.x;
-                 
-                 node.position.x += (targetX - node.position.x) * 0.15;
-                 node.position.y += (targetY - node.position.y) * 0.15;
-                 node.position.z += (targetZ - node.position.z) * 0.15;
-                 
-                 node.quaternion.slerp(camera.quaternion, 0.2);
-             }
-          });
-       }
     }
 
-    if (!window.isOrbitMode) {
-      camera.position.z = 1000 + (Math.abs(scrollVelocity) * 3); 
+    camera.position.z = 1000 + (Math.abs(scrollVelocity) * 3); 
+
+    if(window.isOrbitMode) {
+      document.body.style.cursor = 'crosshair';
     }
 
     // --- Mouse Repulsion Physics ---
@@ -658,142 +619,126 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
 
-  // ---------- 7.5 ORBITAL SHOWCASE LOGIC ---------- //
-  const raycaster = new THREE.Raycaster();
-  const mouseVec = new THREE.Vector2();
+  // Drawer UI Populate
+  const projectDrawer = document.getElementById('project-drawer');
+  const drawerList = document.getElementById('drawer-list');
+  const drawerPreviewTooltip = document.getElementById('drawer-preview-tooltip');
+  const previewTooltipImg = document.getElementById('preview-tooltip-img');
+  const previewTooltipTags = document.getElementById('preview-tooltip-tags');
+
+  function initDrawer() {
+     if(!window.PROJECT_DATA || !drawerList || !drawerPreviewTooltip) return;
+     drawerList.innerHTML = '';
+     Object.keys(window.PROJECT_DATA).forEach((key) => {
+         const data = window.PROJECT_DATA[key];
+         const btn = document.createElement('button');
+         btn.className = 'drawer-btn';
+         btn.innerText = data.title;
+         btn.setAttribute('data-magnetic', '');
+         
+         // Sneak Peek UI Hover
+         btn.addEventListener('mouseenter', (e) => {
+             audio.playBlip(); // tactical sound
+             document.querySelectorAll('.drawer-btn').forEach(b => b.classList.remove('active'));
+             btn.classList.add('active');
+             
+             // Setup tooltip data
+             previewTooltipImg.src = data.images && data.images[0] ? data.images[0] : '';
+             previewTooltipTags.innerHTML = data.tags.map(t => `<span style="font-size: 0.75rem; color: #fff; background: rgba(255,255,255,0.1); padding: 0.4rem 0.8rem; border-radius: 50px;">${t}</span>`).join('');
+             
+             // Snap Tooltip to align with button
+             const rect = btn.getBoundingClientRect();
+             const drawerRect = projectDrawer.getBoundingClientRect();
+             drawerPreviewTooltip.style.display = 'flex';
+             
+             // Align it side-by-side with the button vertically
+             drawerPreviewTooltip.style.top = `${rect.top + (rect.height / 2)}px`;
+             
+             // Quick GSAP to pop it in
+             gsap.to(drawerPreviewTooltip, {
+                opacity: 1,
+                transform: 'translateY(-50%) scale(1)',
+                duration: 0.3,
+                ease: 'power2.out',
+                overwrite: true
+             });
+         });
+
+         // Hide UI Hover
+         btn.addEventListener('mouseleave', () => {
+             gsap.to(drawerPreviewTooltip, {
+                opacity: 0,
+                transform: 'translateY(-50%) scale(0.95)',
+                duration: 0.2,
+                ease: 'power2.in',
+                overwrite: true,
+                onComplete: () => {
+                  drawerPreviewTooltip.style.display = 'none';
+                }
+             });
+         });
+
+         // Open Full Info!
+         btn.addEventListener('click', () => {
+             openHUD(key);
+         });
+         
+         drawerList.appendChild(btn);
+     });
+     initMagnetic(); // Bind these new buttons
+  }
+  initDrawer();
+
+  // Orbital Interaction Controls
+  const launchOrbitBtn = document.getElementById('launch-orbit-btn');
+  const abortOrbitBtn = document.getElementById('abort-orbit-btn');
+  const orbitalLaunchUi = document.getElementById('orbital-launch-ui');
+
+  if(launchOrbitBtn) {
+    launchOrbitBtn.addEventListener('click', () => {
+      window.isOrbitMode = true;
+      audio.playBlip();
+      if(typeof lenis !== 'undefined') lenis.stop(); // Freeze global scrolling
+      
+      // Dramatic camera push-in
+      gsap.to(camera.position, { y: -20, z: 1000, duration: 2, ease: "power3.inOut" });
+      
+      gsap.to(orbitalLaunchUi, { opacity: 0, y: 50, duration: 0.5, pointerEvents: "none", ease: "power2.in" });
+      
+      abortOrbitBtn.style.display = "flex";
+      gsap.fromTo(abortOrbitBtn, 
+        { opacity: 0, scale: 0 }, 
+        { opacity: 1, scale: 1, duration: 0.8, delay: 1, ease: "back.out(1.5)" }
+      );
+      
+      // Slide Drawer In
+      projectDrawer.style.display = "flex";
+      gsap.to(projectDrawer, { right: "0px", opacity: 1, duration: 0.8, delay: 1, ease: "power4.out" });
+    });
+  }
+
+  if(abortOrbitBtn) {
+    abortOrbitBtn.addEventListener('click', () => {
+      window.isOrbitMode = false;
+      audio.playBlip();
+      if(typeof lenis !== 'undefined') lenis.start(); // Restore global scrolling
+      
+      // Slide Drawer Out
+      gsap.to(projectDrawer, { right: "-400px", opacity: 0, duration: 0.5, ease: "power2.in", onComplete: () => {
+         projectDrawer.style.display = "none";
+      }});
+      
+      gsap.to(abortOrbitBtn, { opacity: 0, scale: 0, duration: 0.3, ease: "power2.in", onComplete: () => {
+        abortOrbitBtn.style.display = "none";
+      }});
+      
+      gsap.to(orbitalLaunchUi, { opacity: 1, y: 0, duration: 0.8, pointerEvents: "auto", delay: 0.5, ease: "power2.out" });
+      document.body.style.cursor = 'auto'; 
+    });
+  }
 
   const hudOverlay = document.getElementById('project-hud');
   const hudCloseBtn = document.getElementById('close-hud-btn');
-  const hudExitBtn = document.getElementById('exit-orbit-btn');
-  const launchBtn = document.getElementById('launch-showcase-btn');
-
-  if (launchBtn) {
-    launchBtn.addEventListener('click', () => {
-      lenis.stop(); // Stop scroll
-      document.body.style.overflow = 'hidden';
-      // Fade out the surrounding text
-      gsap.to('.projects .skills-intro, .launch-container', { opacity: 0, duration: 1, pointerEvents: 'none' });
-      // Show Exit button
-      if (hudExitBtn) gsap.to(hudExitBtn, { opacity: 1, pointerEvents: 'auto', duration: 1, delay: 0.5 });
-      
-      window.isOrbitMode = true;
-      if(spaceshipModel) {
-          // Dive the camera deeply, zooming the plane closer exactly as requested (adjusted down slightly)
-          gsap.to(camera.position, { z: 350, y: -10, duration: 2.5, ease: "power3.inOut" });
-          gsap.to(spaceshipModel.position, { z: 180, duration: 2.5, ease: "power3.inOut" });
-      }
-
-      // Fade in the project arrays only once orbital mode has explicitly launched
-      window.projectNodes.forEach(node => {
-         gsap.to(node.material, { opacity: node.userData.baseOpacity, duration: 1, delay: 0.5 });
-      });
-    });
-  }
-
-  // Global `window.PROJECT_DATA` is inherited from index.html which contains the full project configurations.
-  // This ensures a centralized single source of truth for the orbital nodes.
-  
-  function initOrbitNodes() {
-    window.projectNodes = [];
-    if (!window.PROJECT_DATA) return;
-    const projectKeys = Object.keys(window.PROJECT_DATA);
-    
-    // Virtual expansion: Endless stream of data cores
-    let displayKeys = [];
-    while(displayKeys.length < 14) {
-       displayKeys = displayKeys.concat(projectKeys);
-    }
-    
-    displayKeys.forEach((key, index) => {
-       const data = window.PROJECT_DATA[key];
-       let texture = null;
-       if (data.images && data.images[0]) {
-           const loader = new THREE.TextureLoader();
-           loader.setCrossOrigin('anonymous');
-           texture = loader.load(data.images[0]);
-       }
-       
-       // Sleek flat holographic rectangular data slabs
-       const boxGeo = new THREE.PlaneGeometry(130, 75); 
-       
-       const material = new THREE.MeshBasicMaterial({
-          color: 0x88dddd, 
-          map: texture,
-          transparent: true,
-          opacity: 0 
-       });
-       
-       const mesh = new THREE.Mesh(boxGeo, material);
-       
-       // High-end glowing cyber wireframe outline
-       const edges = new THREE.EdgesGeometry(boxGeo);
-       const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0 });
-       const line = new THREE.LineSegments(edges, edgeMaterial);
-       mesh.add(line);
-       
-       mesh.userData.edgeLine = line;
-       mesh.userData.id = key;
-       mesh.userData.baseOpacity = 0.6; // Slightly more visible for warp effect
-       
-       const isLeft = index % 2 === 0;
-       const spreadX = 160 + Math.random() * 40;
-       mesh.position.x = isLeft ? -spreadX : spreadX;
-       mesh.position.y = (Math.random() - 0.5) * 80;
-       mesh.position.z = -1000 - (index * 400);
-       
-       mesh.rotation.y = isLeft ? 0.2 : -0.2;
-       mesh.userData.baseRotY = mesh.rotation.y;
-       
-       // Removed errant position.set
-       window.projectNodes.push(mesh);
-       group.add(mesh);
-    });
-  }
-  
-  initOrbitNodes();
-
-  // (ScrollTrigger for orbit mode has been completely unhooked. 
-  // It now relies absolutely on the 'Initiate Orbital Array' command.)
-
-  // Handle Raycasting Hover
-  window.addEventListener('mousemove', (e) => {
-     mouseVec.x = (e.clientX / window.innerWidth) * 2 - 1;
-     mouseVec.y = -(e.clientY / window.innerHeight) * 2 + 1;
-     
-     if (window.isOrbitMode) {
-        raycaster.setFromCamera(mouseVec, camera);
-        const intersects = raycaster.intersectObjects(window.projectNodes);
-        
-        // Smoothly fade back inactive projects
-        window.projectNodes.forEach(n => {
-           n.material.color.setHex(0x88dddd); // Premium baseline cyan
-           n.material.opacity = n.userData.baseOpacity;
-           if(n.userData.edgeLine) n.userData.edgeLine.material.opacity = 0.3; // subtle glow
-        });
-        
-        if (intersects.length > 0) {
-           const node = intersects[0].object;
-           node.material.color.setHex(0xffffff); // Pop pure white on hover
-           node.material.opacity = 1.0;
-           if(node.userData.edgeLine) node.userData.edgeLine.material.opacity = 1.0; // intense glow!
-        }
-     }
-  });
-  
-  // Handle Raycasting Click
-  window.addEventListener('click', (e) => {
-     const hudOverlay = document.getElementById('project-hud');
-     if (window.isOrbitMode && hudOverlay && !hudOverlay.classList.contains('active')) {
-        raycaster.setFromCamera(mouseVec, camera);
-        const intersects = raycaster.intersectObjects(window.projectNodes);
-        
-        if (intersects.length > 0) {
-           const projectId = intersects[0].object.userData.id;
-           openHUD(projectId);
-        }
-     }
-  });
-
 
   function openHUD(id) {
      const data = window.PROJECT_DATA[id];
@@ -816,9 +761,23 @@ document.addEventListener('DOMContentLoaded', () => {
      const track = document.getElementById('hud-gallery-track');
      track.innerHTML = '';
      data.images.forEach(img => {
+        const aWrapper = document.createElement('a');
+        aWrapper.href = data.url;
+        aWrapper.target = '_blank';
+        aWrapper.style.display = 'block';
+        aWrapper.style.flex = '0 0 100%';
+        aWrapper.style.cursor = 'pointer';
+        
         const iel = document.createElement('img');
         iel.src = img;
-        track.appendChild(iel);
+        iel.style.width = '100%';
+        iel.style.height = '100%';
+        iel.style.objectFit = 'contain';
+        iel.style.padding = '1.5rem';
+        iel.style.boxSizing = 'border-box';
+        
+        aWrapper.appendChild(iel);
+        track.appendChild(aWrapper);
      });
      
      hudOverlay.classList.add('active');
@@ -828,37 +787,6 @@ document.addEventListener('DOMContentLoaded', () => {
      hudCloseBtn.addEventListener('click', () => {
         audio.playClick();
         hudOverlay.classList.remove('active');
-     });
-  }
-  
-  if(hudExitBtn) {
-     hudExitBtn.addEventListener('click', () => {
-        audio.playClick();
-        hudOverlay.classList.remove('active');
-        window.isOrbitMode = false;
-        
-        // Hide Exit Button
-        gsap.to(hudExitBtn, { opacity: 0, pointerEvents: 'none', duration: 0.5 });
-        
-        // Restore UI
-        gsap.to('.projects .skills-intro, .launch-container', { opacity: 1, duration: 1, pointerEvents: 'auto' });
-        
-        // Restore Orbit Nodes
-        window.projectNodes.forEach(node => {
-           gsap.to(node.material, { opacity: 0, duration: 1 });
-        });
-        
-        // Camera snaps back via animate loop, but we animate it gently
-        gsap.to(camera.position, { x: 0, y: 0, z: 1000, duration: 2, ease: "power3.inOut" });
-        gsap.to(camera.rotation, { x: 0, duration: 2, ease: "power3.inOut" });
-        
-        if(spaceshipModel) {
-            gsap.to(spaceshipModel.position, { z: 750, duration: 2, ease: "power3.inOut" });
-            gsap.to(spaceshipModel.rotation, { x: 0.3, duration: 2, ease: "power3.inOut" });
-        }
-        
-        lenis.start();
-        document.body.style.overflow = 'auto';
      });
   }
 

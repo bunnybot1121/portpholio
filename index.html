@@ -151,16 +151,35 @@
         <h2 class="section-title" data-human="03. Selected Work" data-decode>03. Mission Logs</h2>
         <div class="line"></div>
       </div>
-      <p class="skills-intro gsap-fade" style="margin-bottom: 3rem;" data-human="A flat grid cannot contain these systems. Engage the orbital uplink to view projects floating in three-dimensional space." data-decode>Warning: Disengaging two-dimensional viewport constraints. Engage orbital tracking to intercept telemetry payloads.</p>
+      <p class="skills-intro gsap-fade" style="margin-bottom: 3rem;" data-human="Browse the latest intercepts and applications deployed in the field." data-decode>Browse the latest intercepts and applications deployed in the field.</p>
 
-      <div class="launch-container gsap-fade" style="text-align: center; margin-top: 2rem;">
-        <button id="launch-showcase-btn" class="skill-key" style="font-size: 1.5rem; padding: 1.5rem 3rem;" data-magnetic>
-           <span data-human="Launch 3D Orbit" data-decode>Initiate Orbital Array</span>
-        </button>
-        <button id="exit-orbit-btn" class="skill-key" style="font-size: 1.2rem; padding: 1rem 2rem; position: fixed; top: 100px; left: 50%; transform: translateX(-50%); z-index: 9000; opacity: 0; pointer-events: none;" data-magnetic>
-           Abort Orbit
-        </button>
+      <div id="orbital-launch-ui" class="orbital-launch-ui gsap-fade" style="text-align: center; margin-top: 5rem;">
+         <button id="launch-orbit-btn" class="btn btn-primary btn-huge" data-magnetic>
+           <i data-lucide="rocket"></i> <span data-human="Launch Project Orbit" data-decode>Initialize Orbit</span>
+         </button>
+         <p class="orbit-hint" style="margin-top: 1.5rem; color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem;" data-human="Interactive 3D experience. Fine pointer required." data-decode>[WARN: Hardware Acceleration Required]</p>
       </div>
+
+      <button id="abort-orbit-btn" class="btn btn-secondary glass-card" style="display:none; position: fixed; top: 2rem; left: 50%; transform: translateX(-50%); z-index: 50000;" data-magnetic>
+         <i data-lucide="x-circle"></i> <span data-human="Abort Orbit" data-decode>Abort Sequence</span>
+      </button>
+
+      <!-- The Drawer UI for hovering projects in Orbit Mode -->
+      <div id="project-drawer" class="project-drawer glass-card" style="display:none; position: fixed; right: -400px; top: 50%; transform: translateY(-50%); width: 350px; z-index: 40000; padding: 1.5rem; padding-bottom: 4rem; max-height: 90vh; overflow-y: auto; flex-direction: column; gap: 0.5rem; pointer-events: auto !important;">
+         <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--neon-cyan); font-family: var(--font-display);">AVAILABLE LOGS</h3>
+         <div id="drawer-list" style="display: flex; flex-direction: column; gap: 0.25rem; pointer-events: auto !important;"></div>
+      </div>
+
+      <!-- Sneak Peek 2D Tooltip that opens near the drawer -->
+      <div id="drawer-preview-tooltip" class="glass-card" style="display:none; position: fixed; right: 370px; width: 340px; z-index: 39000; padding: 1.5rem; flex-direction: column; pointer-events: none; opacity: 0; transform: translateY(-50%) scale(0.95); transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1), top 0.1s linear; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(10, 10, 15, 0.85); box-shadow: -10px 10px 30px rgba(0,0,0,0.6);">
+         <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 1rem; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);">
+            <img id="preview-tooltip-img" src="" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+         </div>
+         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="preview-tooltip-tags"></div>
+      </div>
+
+      <!-- The grid serves as a fallback for mobile or later use, kept hidden for now to maintain layout purity -->
+      <div class="project-grid" id="project-grid" style="display: none;"></div>
     </section>
   <script>
     window.PROJECT_DATA = {
@@ -168,77 +187,49 @@
         title: "Municipal Command",
         link: "rnunicipal.vercel.app",
         url: "https://rnunicipal.vercel.app",
-        images: [
-           "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1614064641913-6b714bca3c19?q=80&w=800&auto=format&fit=crop"
-        ],
+        images: ["assets/proj_municipal.png"],
         tags: ["React", "IoT Telemetry", "Geospatial / Leaflet"]
       },
       "proj_citizens": {
         title: "Citizens App",
         link: "citizenz.vercel.app",
         url: "https://citizenz.vercel.app",
-        images: [
-           "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop"
-        ],
+        images: ["assets/proj_citizens.png"],
         tags: ["Neumorphic UI", "City Reporting", "PWA Config"]
       },
       "proj_fieldstaff": {
         title: "FieldStaff App",
         link: "fieldstaff.vercel.app",
         url: "https://fieldstaff.vercel.app",
-        images: [
-           "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=800&auto=format&fit=crop"
-        ],
+        images: ["https://api.microlink.io/?url=https://fieldstaff.vercel.app&screenshot=true&embed=screenshot.url"],
         tags: ["Next.js Mobile", "Task Tracking", "Real-Time Sync"]
       },
       "proj_uivault": {
         title: "UI Vault V2 Neo",
         link: "uivault1121.vercel.app",
         url: "https://uivault1121.vercel.app",
-        images: [
-           "https://images.unsplash.com/photo-1618761714954-0b8cd0026356?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=800&auto=format&fit=crop"
-        ],
+        images: ["assets/proj_uivault.png"],
         tags: ["Design System", "Masonry Grid", "Component Library"]
       },
       "proj_bughunt": {
         title: "BugHunt Tracker",
         link: "bughunt1121.vercel.app",
         url: "https://bughunt1121.vercel.app",
-        images: [
-           "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=800&auto=format&fit=crop"
-        ],
+        images: ["assets/proj_bughunt.png"],
         tags: ["Algorithm Trainer", "LeetCode Engine", "React"]
       },
       "proj_cafe": {
         title: "929 King Cafe",
         link: "v0-929kingscafe.vercel.app",
         url: "https://v0-929kingscafe.vercel.app/",
-        images: [
-           "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop",
-           "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800&auto=format&fit=crop"
-        ],
+        images: ["assets/proj_cafe.png"],
         tags: ["Restaurant UI", "Photography", "Vercel"]
       },
       "proj_goted": {
          title: "The Goted",
          link: "goted.vercel.app",
          url: "https://goted.vercel.app",
-         images: [
-            "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=800&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=800&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1456324504439-367cee3b3c32?q=80&w=800&auto=format&fit=crop"
-         ],
+         images: ["assets/proj_goted.png"],
          tags: ["Neo-Brutalism", "Productivity", "Mindmaps"]
       }
     };
@@ -294,7 +285,7 @@
      <div class="hud-main">
         <div class="hud-info">
            <h2 id="hud-title" class="kinetic-text">Project Title</h2>
-           <a id="hud-deploy-btn" href="#" target="_blank" class="glass-card deploy-btn" data-magnetic>
+           <a id="hud-deploy-btn" href="#" target="_blank" class="glass-card deploy-btn">
              <span id="hud-link">deploy.system</span> <i data-lucide="external-link"></i>
            </a>
            <div id="hud-tags" class="hud-tags"></div>
