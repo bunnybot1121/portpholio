@@ -57,21 +57,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- 3. BRUTALIST LOADER ---------- //
   const loaderCounter = document.querySelector('.loader-counter');
   const loaderProgress = document.querySelector('.loader-progress');
-  let count = 0;
-  
-  const updateLoader = setInterval(() => {
-    count += Math.floor(Math.random() * 12) + 1;
-    if (count >= 100) {
-      count = 100;
-      clearInterval(updateLoader);
-      loaderCounter.innerText = "100";
-      loaderProgress.style.width = "100%";
-      playHeroSequence();
-    } else {
-      loaderCounter.innerText = String(count).padStart(3, '0');
-      loaderProgress.style.width = count + "%";
+  // The loader is now driven by actual 3D model loading progress
+  window.updateLoaderProgress = (percent) => {
+    const val = Math.min(Math.floor(percent), 100);
+    if(loaderCounter) loaderCounter.innerText = String(val).padStart(3, '0');
+    if(loaderProgress) loaderProgress.style.width = val + "%";
+    
+    if (val >= 100 && !window.heroSequencePlayed) {
+      window.heroSequencePlayed = true;
+      // Slight delay for smoothness
+      setTimeout(playHeroSequence, 400);
     }
-  }, 30);
+  };
 
   function playHeroSequence() {
     const tl = gsap.timeline();
@@ -176,43 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- 5. EXPANSIVE PROJECT MODAL SYSTEM ---------- //
   // Removed Modal: Relying on full-fidelity inline horizontal image galleries inside Glassmorphic Grid.
 
-  // ---------- 5.5 FULL-SCREEN MOBILE MENU ---------- //
-  const menuOverlay = document.querySelector('.menu-overlay');
-  const menuBg = document.querySelector('.menu-bg');
-  const menuLinksDiv = document.querySelector('.menu-links');
-  const menuLinks = document.querySelectorAll('.menu-link');
-  const menuToggleBtn = document.querySelector('.menu-toggle');
-  const menuCloseBtn = document.querySelector('.menu-close');
-
-  let isMenuOpen = false;
-  const menuTl = gsap.timeline({ paused: true, reversed: true });
-
-  menuTl.to(menuOverlay, { opacity: 1, duration: 0.1 })
-        .to(menuOverlay, { pointerEvents: "auto", duration: 0 })
-        .fromTo(menuBg, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.inOut" })
-        .to(menuCloseBtn, { top: "2rem", right: "2rem", duration: 0.4, ease: "back.out(1.5)" }, "-=0.2")
-        .to(menuLinks, { y: 0, opacity: 1, duration: 0.6, stagger: 0.1, ease: "power4.out" }, "-=0.2");
-
-  function toggleMenu() {
-    isMenuOpen = !isMenuOpen;
-    if (isMenuOpen) {
-      document.body.classList.add('modal-open');
-      lenis.stop();
-      menuTl.play();
-    } else {
-      document.body.classList.remove('modal-open');
-      lenis.start();
-      menuTl.reverse();
-    }
-  }
-
-  menuToggleBtn.addEventListener('click', toggleMenu);
-  menuCloseBtn.addEventListener('click', toggleMenu);
-  menuLinks.forEach(link => {
-    link.addEventListener('click', () => {
-      if(isMenuOpen) toggleMenu();
-    });
-  });
 
   // ---------- 6. CONTACT FORM INTERACTION ---------- //
   const contactForm = document.querySelector('.contact-form');
@@ -367,43 +327,74 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load the downloaded spaceship GLB from assets
   let spaceshipModel = null;
   const gltfLoader = new THREE.GLTFLoader();
-  gltfLoader.load('assets/spaceship_colaid1_50k.glb', (gltf) => {
-    spaceshipModel = gltf.scene;
+  gltfLoader.load(
+    'assets/spaceship_colaid1_50k.glb', 
+    (gltf) => {
+      spaceshipModel = gltf.scene;
 
-    // Use Box3 to automatically scale the model to a reasonable size
-    const box = new THREE.Box3().setFromObject(spaceshipModel);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z);
-    
-    // We want the ship to be roughly 150 units wide/long
-    const targetSize = 150;
-    const scaleFactor = targetSize / maxDim;
-    spaceshipModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-    
-    // Position it appropriately in front of the camera
-    spaceshipModel.position.set(0, -20, 750); // Pushed further away from camera (Z=1000)
-    
-    // Base rotations - aligned perfectly flat and showing rear engines as requested
-    spaceshipModel.rotation.y = 0; 
-    spaceshipModel.rotation.x = 0; 
+      // Ensure loader hits 100% just in case
+      if(window.updateLoaderProgress) window.updateLoaderProgress(100);
 
-    // Apply basic material styling if needed, or leave original textures
-    spaceshipModel.traverse((child) => {
-      // We keep the original textured colors of your beautiful spaceship!
-      // The backdrop-filter on the buttons will ensure legibility against it.
-    });
+      // Use Box3 to automatically scale the model to a reasonable size
+      const box = new THREE.Box3().setFromObject(spaceshipModel);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const maxDim = Math.max(size.x, size.y, size.z);
+      
+      const targetSize = 150;
+      const scaleFactor = targetSize / maxDim;
+      spaceshipModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+      
+      // Position it appropriately in front of the camera
+      spaceshipModel.position.set(0, -20, 750); 
+      
+      spaceshipModel.rotation.y = 0; 
+      spaceshipModel.rotation.x = 0; 
 
-    // Clean, natural lighting for the original textures
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-    scene.add(ambientLight);
-    
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.position.set(200, 500, 300);
-    scene.add(dirLight);
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+      scene.add(ambientLight);
+      
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+      dirLight.position.set(200, 500, 300);
+      scene.add(dirLight);
 
-    group.add(spaceshipModel);
-  });
+      group.add(spaceshipModel);
+
+      // --- NEW: Scroll-Driven Spaceship Flight (from SKILL_3dweb.md) ---
+      gsap.to(spaceshipModel.position, {
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1
+        },
+        z: 300,
+        y: 40
+      });
+
+      gsap.to(spaceshipModel.rotation, {
+        scrollTrigger: {
+          trigger: "body",
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 2
+        },
+        x: Math.PI / 6,
+        z: Math.PI / 8
+      });
+    },
+    (xhr) => {
+      // True GLTF Loading State (from SKILL_3dweb.md)
+      if(window.updateLoaderProgress && xhr.total > 0) {
+        const percent = (xhr.loaded / xhr.total) * 100;
+        window.updateLoaderProgress(percent);
+      }
+    },
+    (error) => {
+      console.error("Error loading model", error);
+      if(window.updateLoaderProgress) window.updateLoaderProgress(100);
+    }
+  );
 
   // Mobile Performance Scaling
   const isMobile = window.innerWidth <= 768;
@@ -707,8 +698,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       abortOrbitBtn.style.display = "flex";
       gsap.fromTo(abortOrbitBtn, 
-        { opacity: 0, scale: 0 }, 
-        { opacity: 1, scale: 1, duration: 0.8, delay: 1, ease: "back.out(1.5)" }
+        { opacity: 0, scale: 0, xPercent: -50 }, 
+        { opacity: 1, scale: 1, xPercent: -50, duration: 0.8, delay: 1, ease: "back.out(1.5)" }
       );
       
       // Slide Drawer In
@@ -719,21 +710,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if(abortOrbitBtn) {
     abortOrbitBtn.addEventListener('click', () => {
-      window.isOrbitMode = false;
-      audio.playBlip();
-      if(typeof lenis !== 'undefined') lenis.start(); // Restore global scrolling
-      
-      // Slide Drawer Out
-      gsap.to(projectDrawer, { right: "-400px", opacity: 0, duration: 0.5, ease: "power2.in", onComplete: () => {
-         projectDrawer.style.display = "none";
-      }});
-      
-      gsap.to(abortOrbitBtn, { opacity: 0, scale: 0, duration: 0.3, ease: "power2.in", onComplete: () => {
-        abortOrbitBtn.style.display = "none";
-      }});
-      
-      gsap.to(orbitalLaunchUi, { opacity: 1, y: 0, duration: 0.8, pointerEvents: "auto", delay: 0.5, ease: "power2.out" });
-      document.body.style.cursor = 'auto'; 
+      try {
+        window.isOrbitMode = false;
+        if (audio && audio.playBlip) audio.playBlip();
+        if(typeof lenis !== 'undefined') lenis.start(); 
+        
+        const projectHud = document.getElementById('project-hud');
+        if(projectHud && projectHud.classList.contains('active')) {
+           projectHud.classList.remove('active');
+        }
+
+        const pDrawer = document.getElementById('project-drawer');
+        if (pDrawer) {
+          gsap.to(pDrawer, { right: "-400px", opacity: 0, duration: 0.5, ease: "power2.in", onComplete: () => {
+             pDrawer.style.display = "none";
+          }});
+        }
+        
+        gsap.to(abortOrbitBtn, { opacity: 0, scale: 0, xPercent: -50, duration: 0.3, ease: "power2.in", onComplete: () => {
+          abortOrbitBtn.style.display = "none";
+        }});
+        
+        const launchUi = document.getElementById('orbital-launch-ui');
+        if (launchUi) {
+          gsap.to(launchUi, { opacity: 1, y: 0, duration: 0.8, pointerEvents: "auto", delay: 0.5, ease: "power2.out" });
+        }
+        
+        // Restore camera position to default!
+        gsap.to(camera.position, { y: 0, duration: 2, ease: "power3.inOut" });
+
+        document.body.style.cursor = 'auto';
+      } catch (e) {
+        console.error("Abort Orbit Error: ", e);
+      }
     });
   }
 
@@ -746,6 +755,12 @@ document.addEventListener('DOMContentLoaded', () => {
      audio.playBlip();
      
      document.getElementById('hud-title').innerText = data.title;
+     
+     const hudDesc = document.getElementById('hud-desc');
+     if (hudDesc) {
+       hudDesc.innerText = data.info || '';
+     }
+
      document.getElementById('hud-link').innerText = data.link;
      document.getElementById('hud-deploy-btn').href = data.url;
      
@@ -788,6 +803,28 @@ document.addEventListener('DOMContentLoaded', () => {
         audio.playClick();
         hudOverlay.classList.remove('active');
      });
+  }
+
+  // Allow Escape key to close HUD and abort orbit mode
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (hudOverlay && hudOverlay.classList.contains('active')) {
+        audio.playClick();
+        hudOverlay.classList.remove('active');
+      } else if (window.isOrbitMode && abortOrbitBtn) {
+        abortOrbitBtn.click();
+      }
+    }
+  });
+
+  // Allow clicking on the backdrop of the HUD to close it
+  if (hudOverlay) {
+    hudOverlay.addEventListener('click', (e) => {
+      if (e.target === hudOverlay) {
+        audio.playClick();
+        hudOverlay.classList.remove('active');
+      }
+    });
   }
 
 });

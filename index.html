@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1776561705316?v=1776561462203">
   <link rel="stylesheet" href="ProfileCard.css">
   
   <!-- Icons -->
@@ -69,7 +69,8 @@
   <!-- Interactive 3D Web Canvas -->
   <canvas id="bg-canvas"></canvas>
 
-  <!-- Gradient Overlay -->
+  <!-- Grain & Gradient Overlays -->
+  <div class="noise-overlay"></div>
   <div class="bg-gradient-overlay"></div>
 
   <!-- Global Decrypt Button -->
@@ -85,24 +86,7 @@
       <a href="#projects" class="nav-link" data-magnetic data-human="Selected Work" data-decode>Mission Logs</a>
       <a href="#contact" class="nav-link" data-magnetic data-human="Contact" data-decode>Transmission</a>
     </div>
-    <button class="menu-toggle" data-magnetic>
-      <i data-lucide="menu"></i>
-    </button>
   </nav>
-
-  <!-- Full Screen GSAP Mobile Menu -->
-  <div class="menu-overlay">
-    <div class="menu-bg"></div>
-    <div class="menu-content">
-      <button class="menu-close" data-magnetic><i data-lucide="x"></i></button>
-      <div class="menu-links">
-        <a href="#about" class="menu-link" data-magnetic data-human="01. About" data-decode>01. Origin</a>
-        <a href="#skills" class="menu-link" data-magnetic data-human="02. Competencies" data-decode>02. Subsystems</a>
-        <a href="#projects" class="menu-link" data-magnetic data-human="03. Selected Work" data-decode>03. Mission Logs</a>
-        <a href="#contact" class="menu-link" data-magnetic data-human="04. Contact" data-decode>04. Transmission</a>
-      </div>
-    </div>
-  </div>
 
   <main>
     <section id="hero" class="hero">
@@ -182,28 +166,28 @@
          </button>
          <p class="orbit-hint" style="margin-top: 1.5rem; color: var(--text-muted); font-family: var(--font-display); font-size: 0.85rem;" data-human="Interactive 3D experience. Fine pointer required." data-decode>[WARN: Hardware Acceleration Required]</p>
       </div>
-
-      <button id="abort-orbit-btn" class="btn btn-secondary glass-card" style="display:none; position: fixed; top: 2rem; left: 50%; transform: translateX(-50%); z-index: 50000;" data-magnetic>
-         <i data-lucide="x-circle"></i> <span data-human="Abort Orbit" data-decode>Abort Sequence</span>
-      </button>
-
-      <!-- The Drawer UI for hovering projects in Orbit Mode -->
-      <div id="project-drawer" class="project-drawer glass-card" style="display:none; position: fixed; right: -400px; top: 50%; transform: translateY(-50%); width: 350px; z-index: 40000; padding: 1.5rem; padding-bottom: 4rem; max-height: 90vh; overflow-y: auto; flex-direction: column; gap: 0.5rem; pointer-events: auto !important;">
-         <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--neon-cyan); font-family: var(--font-display);">AVAILABLE LOGS</h3>
-         <div id="drawer-list" style="display: flex; flex-direction: column; gap: 0.25rem; pointer-events: auto !important;"></div>
-      </div>
-
-      <!-- Sneak Peek 2D Tooltip that opens near the drawer -->
-      <div id="drawer-preview-tooltip" class="glass-card" style="display:none; position: fixed; right: 370px; width: 340px; z-index: 39000; padding: 1.5rem; flex-direction: column; pointer-events: none; opacity: 0; transform: translateY(-50%) scale(0.95); transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1), top 0.1s linear; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(10, 10, 15, 0.85); box-shadow: -10px 10px 30px rgba(0,0,0,0.6);">
-         <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 1rem; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);">
-            <img id="preview-tooltip-img" src="" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
-         </div>
-         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="preview-tooltip-tags"></div>
-      </div>
-
       <!-- The grid serves as a fallback for mobile or later use, kept hidden for now to maintain layout purity -->
       <div class="project-grid" id="project-grid" style="display: none;"></div>
     </section>
+
+    <!-- Global App Overlays -->
+    <button id="abort-orbit-btn" class="btn btn-secondary glass-card" style="display:none; position: fixed; top: 2rem; left: 50%; z-index: 99999;" data-magnetic>
+       <i data-lucide="x-circle"></i> <span data-human="Abort Orbit" data-decode>Abort Sequence</span>
+    </button>
+
+    <!-- The Drawer UI for hovering projects in Orbit Mode -->
+    <div id="project-drawer" class="project-drawer glass-card" style="display:none; position: fixed; right: -400px; top: 50%; transform: translateY(-50%); width: 350px; z-index: 40000; padding: 1.5rem; padding-bottom: 4rem; max-height: 90vh; overflow-y: auto; flex-direction: column; gap: 0.5rem; pointer-events: auto !important;">
+       <h3 style="margin-top: 0; margin-bottom: 0.5rem; font-size: 1.1rem; color: var(--neon-cyan); font-family: var(--font-display);">AVAILABLE LOGS</h3>
+       <div id="drawer-list" style="display: flex; flex-direction: column; gap: 0.25rem; pointer-events: auto !important;"></div>
+    </div>
+
+    <!-- Sneak Peek 2D Tooltip that opens near the drawer -->
+    <div id="drawer-preview-tooltip" class="glass-card" style="display:none; position: fixed; right: 370px; width: 340px; z-index: 39000; padding: 1.5rem; flex-direction: column; pointer-events: none; opacity: 0; transform: translateY(-50%) scale(0.95); transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1), top 0.1s linear; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(10, 10, 15, 0.85); box-shadow: -10px 10px 30px rgba(0,0,0,0.6);">
+       <div style="width: 100%; height: 180px; overflow: hidden; border-radius: 8px; margin-bottom: 1rem; position: relative; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05);">
+          <img id="preview-tooltip-img" src="" style="width: 100%; height: 100%; object-fit: contain; object-position: center;">
+       </div>
+       <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;" id="preview-tooltip-tags"></div>
+    </div>
   <script>
     window.PROJECT_DATA = {
       "proj_municipal": {
@@ -211,49 +195,56 @@
         link: "rnunicipal.vercel.app",
         url: "https://rnunicipal.vercel.app",
         images: ["assets/proj_municipal.png"],
-        tags: ["React", "IoT Telemetry", "Geospatial / Leaflet"]
+        tags: ["React", "IoT Telemetry", "Geospatial / Leaflet"],
+        info: "A comprehensive civic management dashboard providing real-time IoT telemetry, incident reporting, and spatial analytics for municipal field operations. Built for high-latency environments to ensure unbroken civic monitoring."
       },
       "proj_citizens": {
         title: "Citizens App",
         link: "citizenz.vercel.app",
         url: "https://citizenz.vercel.app",
         images: ["assets/proj_citizens.png"],
-        tags: ["Neumorphic UI", "City Reporting", "PWA Config"]
+        tags: ["Neumorphic UI", "City Reporting", "PWA Config"],
+        info: "A forward-facing PWA designed for instantaneous civilian anomaly reporting. Integrates neumorphic design constraints to guide user attention directly to the core reporting protocols, with offline-sync capabilities."
       },
       "proj_fieldstaff": {
         title: "FieldStaff App",
         link: "fieldstaff.vercel.app",
         url: "https://fieldstaff.vercel.app",
         images: ["https://api.microlink.io/?url=https://fieldstaff.vercel.app&screenshot=true&embed=screenshot.url"],
-        tags: ["Next.js Mobile", "Task Tracking", "Real-Time Sync"]
+        tags: ["Next.js Mobile", "Task Tracking", "Real-Time Sync"],
+        info: "A rigorous mobile interface deployed onto Next.js infrastructure. Engineered for field agents to execute mission-critical tasks with robust offline data persistence and real-time synchronisation upon network re-entry."
       },
       "proj_uivault": {
         title: "UI Vault V2 Neo",
         link: "uivault1121.vercel.app",
         url: "https://uivault1121.vercel.app",
         images: ["assets/proj_uivault.png"],
-        tags: ["Design System", "Masonry Grid", "Component Library"]
+        tags: ["Design System", "Masonry Grid", "Component Library"],
+        info: "An elite architectural repository of UI components and styling tokens. Serves as the central command node for standardizing design heuristics across all front-end deployments."
       },
       "proj_bughunt": {
         title: "BugHunt Tracker",
         link: "bughunt1121.vercel.app",
         url: "https://bughunt1121.vercel.app",
         images: ["assets/proj_bughunt.png"],
-        tags: ["Algorithm Trainer", "LeetCode Engine", "React"]
+        tags: ["Algorithm Trainer", "LeetCode Engine", "React"],
+        info: "An interactive, gamified neural-trainer for algorithmic pattern recognition. Features built-in execution timers, cognitive strain analytics, and a rigorous dark-mode tactical interface."
       },
       "proj_cafe": {
         title: "929 King Cafe",
         link: "v0-929kingscafe.vercel.app",
         url: "https://v0-929kingscafe.vercel.app/",
         images: ["assets/proj_cafe.png"],
-        tags: ["Restaurant UI", "Photography", "Vercel"]
+        tags: ["Restaurant UI", "Photography", "Vercel"],
+        info: "A premium hospitality interface optimized for zero-friction user journeys. Blends bleeding-edge photography grids with frictionless order routing for maximum spatial throughput."
       },
       "proj_goted": {
          title: "The Goted",
          link: "goted.vercel.app",
          url: "https://goted.vercel.app",
          images: ["assets/proj_goted.png"],
-         tags: ["Neo-Brutalism", "Productivity", "Mindmaps"]
+         tags: ["Neo-Brutalism", "Productivity", "Mindmaps"],
+         info: "A hyper-productive cognitive mapping tool built on neo-brutalist aesthetics. Strips away visual excess to focus purely on linking ideas, executing tasks, and architecting thought structures."
       }
     };
   </script>
@@ -303,11 +294,14 @@
 
   <!-- Full Screen Project HUD -->
   <div id="project-hud" class="project-hud">
-     <button id="close-hud-btn" class="glass-card" data-magnetic><i data-lucide="x"></i></button>
+     <button id="close-hud-btn" class="btn btn-secondary glass-card" style="position: fixed; top: 2rem; right: 2rem; z-index: 999999; display: flex; align-items: center; gap: 0.5rem;" data-magnetic>
+        <i data-lucide="x-octagon"></i> <span style="font-family: var(--font-display); font-size: 0.9rem;">Close Project</span>
+     </button>
      
      <div class="hud-main">
         <div class="hud-info">
            <h2 id="hud-title" class="kinetic-text">Project Title</h2>
+           <p id="hud-desc" class="hud-desc" style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;"></p>
            <a id="hud-deploy-btn" href="#" target="_blank" class="glass-card deploy-btn">
              <span id="hud-link">deploy.system</span> <i data-lucide="external-link"></i>
            </a>
@@ -321,7 +315,7 @@
      </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=1776561451167"></script>
   <script src="ProfileCard.js"></script>
   <script>
     lucide.createIcons();
