@@ -346,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
       spaceshipModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
       
       // Position it appropriately in front of the camera
-      spaceshipModel.position.set(0, -20, 750); 
+      spaceshipModel.position.set(0, -20, 750);   
       
       spaceshipModel.rotation.y = 0; 
       spaceshipModel.rotation.x = 0; 
