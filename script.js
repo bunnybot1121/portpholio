@@ -3,13 +3,162 @@ window.onerror = function(msg, url, line) {
   if(el) el.innerText = "ERR: " + msg + " L:" + line; 
 };
 document.addEventListener('DOMContentLoaded', () => {
-  // ---------- 0. AUDIO ENGINE (REMOVED) ---------- //
-  // The AudioEngine has been intentionally removed as requested.
-  const audio = {
-    setThruster: () => {},
-    playBlip: () => {},
-    playClick: () => {}
+  // ---------- 0. AUDIO ENGINE (WEB AUDIO API) ---------- //
+  class AudioEngine {
+    constructor() {
+      this.ctx = null;
+      this.initialized = false;
+      this.masterGain = null;
+      this.droneGain = null;
+      this.thrusterFilter = null;
+      this.thrusterGain = null;
+      this.thrusterSrc = null;
+      this.breezeSource = null;
+      this.breezeFilter = null;
+    }
+
+    init() {
+      if (this.initialized) return;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        this.ctx = new AudioContextClass();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.gain.value = 0.5;
+        this.masterGain.connect(this.ctx.destination);
+        
+        // Drone
+        this.droneGain = this.ctx.createGain();
+        this.droneGain.gain.value = 0;
+        this.droneGain.connect(this.masterGain);
+
+        // Thruster
+        this.thrusterFilter = this.ctx.createBiquadFilter();
+        this.thrusterFilter.type = 'lowpass';
+        this.thrusterFilter.frequency.value = 400;
+        this.thrusterGain = this.ctx.createGain();
+        this.thrusterGain.gain.value = 0;
+        this.thrusterFilter.connect(this.thrusterGain);
+        this.thrusterGain.connect(this.masterGain);
+
+        this.initialized = true;
+
+        // Ambient breeze
+        const breezeBufferSize = this.ctx.sampleRate * 2;
+        const breezeBuffer = this.ctx.createBuffer(1, breezeBufferSize, this.ctx.sampleRate);
+        const breezeData = breezeBuffer.getChannelData(0);
+        for (let i = 0; i < breezeBufferSize; i++) {
+          breezeData[i] = Math.random() * 2 - 1; 
+        }
+        
+        this.breezeSource = this.ctx.createBufferSource();
+        this.breezeSource.buffer = breezeBuffer;
+        this.breezeSource.loop = true;
+        
+        this.breezeFilter = this.ctx.createBiquadFilter();
+        this.breezeFilter.type = 'bandpass';
+        this.breezeFilter.Q.value = 1.0;
+        this.breezeFilter.frequency.value = 350;
+        
+        const breezeLfo = this.ctx.createOscillator();
+        breezeLfo.type = 'sine';
+        breezeLfo.frequency.value = 0.05; 
+        const breezeLfoGain = this.ctx.createGain();
+        breezeLfoGain.gain.value = 250; 
+        breezeLfo.connect(breezeLfoGain);
+        breezeLfoGain.connect(this.breezeFilter.frequency);
+        
+        this.breezeSource.connect(this.breezeFilter);
+        this.breezeFilter.connect(this.droneGain);
+        
+        this.breezeSource.start();
+        breezeLfo.start();
+        
+        this.droneGain.gain.setTargetAtTime(0.04, this.ctx.currentTime, 5);
+
+        // Thruster noise generator
+        const bufferSize = this.ctx.sampleRate * 2;
+        const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+        this.thrusterSrc = this.ctx.createBufferSource();
+        this.thrusterSrc.buffer = noiseBuffer;
+        this.thrusterSrc.loop = true;
+        this.thrusterSrc.connect(this.thrusterFilter);
+        this.thrusterSrc.start();
+      } catch (e) {
+        console.warn("AudioContext failed to initialize:", e);
+      }
+    }
+
+    playBlip() {
+      if (!this.initialized || !this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.2, this.ctx.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.2);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    playClick() {
+      if (!this.initialized || !this.ctx) return;
+      try {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.1);
+        
+        gain.gain.setValueAtTime(0, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    setThruster(intensity) {
+      if (!this.initialized || !this.ctx) return;
+      try {
+        const targetGain = intensity * 0.4;
+        const targetFreq = 400 + (intensity * 3000);
+        this.thrusterGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.2);
+        this.thrusterFilter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.2);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }
+
+  const audio = new AudioEngine();
+  
+  const initAudio = () => { 
+    audio.init(); 
   };
+  document.addEventListener('click', initAudio, { once: true, capture: true });
+  document.addEventListener('wheel', initAudio, { once: true, capture: true });
+  document.addEventListener('touchstart', initAudio, { once: true, capture: true });
+
 
   // ---------- 1. LENIS SMOOTH SCROLL ---------- //
   const lenis = new Lenis({
@@ -318,7 +467,7 @@ document.addEventListener('DOMContentLoaded', () => {
   camera.position.z = 1000;
 
   const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   const group = new THREE.Group();
@@ -351,6 +500,10 @@ document.addEventListener('DOMContentLoaded', () => {
       spaceshipModel.rotation.y = 0; 
       spaceshipModel.rotation.x = 0; 
 
+      // Initialize userData targets for scroll tracking
+      spaceshipModel.userData.scrollPos = { x: 0, y: -20, z: 820 };
+      spaceshipModel.userData.scrollRot = { x: 0, y: 0, z: 0 };
+
       const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
       scene.add(ambientLight);
       
@@ -361,18 +514,18 @@ document.addEventListener('DOMContentLoaded', () => {
       group.add(spaceshipModel);
 
       // --- NEW: Scroll-Driven Spaceship Flight (from SKILL_3dweb.md) ---
-      gsap.to(spaceshipModel.position, {
+      gsap.to(spaceshipModel.userData.scrollPos, {
         scrollTrigger: {
           trigger: "body",
           start: "top top",
           end: "bottom bottom",
           scrub: 1
         },
-        z: 300,
+        z: 550,
         y: 40
       });
 
-      gsap.to(spaceshipModel.rotation, {
+      gsap.to(spaceshipModel.userData.scrollRot, {
         scrollTrigger: {
           trigger: "body",
           start: "top top",
@@ -471,8 +624,6 @@ document.addEventListener('DOMContentLoaded', () => {
   window.projectNodes = []; // Will hold the 3D meshes for projects
 
   function animate() {
-    requestAnimationFrame(animate);
-    
     targetX = mouseX * 0.001;
     targetY = mouseY * 0.001;
 
@@ -494,30 +645,34 @@ document.addEventListener('DOMContentLoaded', () => {
       group.rotation.z += (0 - group.rotation.z) * 0.05;
     }
 
-    // Bank the spaceship model slightly with mouse
+    // Bank the spaceship model slightly with mouse and combine with base scroll coordinates
     if(spaceshipModel) {
-       if (!window.isOrbitMode) {
-         spaceshipModel.rotation.z = -targetX * 0.5;
-         spaceshipModel.rotation.x = -(targetY * 0.5);
-         spaceshipModel.position.z = 750 + (Math.abs(scrollVelocity) * 0.8);
-       } else {
-         // In orbit mode, tilted down to perfectly showcase the rear/top chassis (Arcade POV)
-         spaceshipModel.rotation.z -= spaceshipModel.rotation.z * 0.1;
-         spaceshipModel.rotation.x += (0.25 - spaceshipModel.rotation.x) * 0.1;
-       }
+       const basePos = spaceshipModel.userData.scrollPos || { x: 0, y: -20, z: 820 };
+       const baseRot = spaceshipModel.userData.scrollRot || { x: 0, y: 0, z: 0 };
        const time = Date.now() * 0.001;
-       if(!window.isOrbitMode) {
-           spaceshipModel.position.y = -20 + Math.sin(time * 2) * 5; 
-           spaceshipModel.rotation.z += Math.sin(time * 4) * 0.02; 
-           spaceshipModel.position.x = Math.cos(time * 1.5) * 3;
-           spaceshipModel.rotation.y += (0 - spaceshipModel.rotation.y) * 0.1;
+
+       if (!window.isOrbitMode) {
+         // Smoothly bank into coordinates with mouse offsets on top of scroll bases
+         const targetZ = basePos.z + (Math.abs(scrollVelocity) * 0.8);
+         
+         spaceshipModel.position.x += (Math.cos(time * 1.5) * 3 - spaceshipModel.position.x) * 0.1;
+         spaceshipModel.position.y += (basePos.y + Math.sin(time * 2) * 5 - spaceshipModel.position.y) * 0.1;
+         spaceshipModel.position.z += (targetZ - spaceshipModel.position.z) * 0.1;
+
+         spaceshipModel.rotation.x += (baseRot.x - targetY * 0.5 - spaceshipModel.rotation.x) * 0.1;
+         spaceshipModel.rotation.y += (0 - spaceshipModel.rotation.y) * 0.1;
+         spaceshipModel.rotation.z += (baseRot.z - targetX * 0.5 + Math.sin(time * 4) * 0.02 - spaceshipModel.rotation.z) * 0.1;
        } else {
-           // Locked rigidly to the center viewport with an energetic up/down pulse bob
-           spaceshipModel.position.x += (0 - spaceshipModel.position.x) * 0.1;
-           const targetY = -25 + Math.sin(time * 3) * 1.5;
-           spaceshipModel.position.y += (targetY - spaceshipModel.position.y) * 0.1;
-           // Face the rear to the camera for an authentic space-fighter POV!
-           spaceshipModel.rotation.y += (Math.PI - spaceshipModel.rotation.y) * 0.1;
+         // In orbit mode, locked rigidly to the center viewport with an energetic pulse bob
+         spaceshipModel.position.x += (0 - spaceshipModel.position.x) * 0.1;
+         const targetY = -25 + Math.sin(time * 3) * 1.5;
+         spaceshipModel.position.y += (targetY - spaceshipModel.position.y) * 0.1;
+         spaceshipModel.position.z += (820 - spaceshipModel.position.z) * 0.1;
+
+         // Face the rear to the camera for an authentic space-fighter POV!
+         spaceshipModel.rotation.y += (Math.PI - spaceshipModel.rotation.y) * 0.1;
+         spaceshipModel.rotation.x += (0.25 - spaceshipModel.rotation.x) * 0.1;
+         spaceshipModel.rotation.z += (0 - spaceshipModel.rotation.z) * 0.1;
        }
     }
 
@@ -602,12 +757,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.render(scene, camera);
   }
 
-  animate();
+  gsap.ticker.add(animate);
 
+  let resizeTimeout;
   window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }, 150);
   });
 
   // Drawer UI Populate
