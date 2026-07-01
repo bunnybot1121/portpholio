@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) return;
         this.ctx = new AudioContextClass();
+        this.ctx.resume();
         this.masterGain = this.ctx.createGain();
         this.masterGain.gain.value = 0.5;
         this.masterGain.connect(this.ctx.destination);
@@ -96,6 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
     playBlip() {
       if (!this.initialized || !this.ctx) return;
       try {
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'sine';
@@ -118,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
     playClick() {
       if (!this.initialized || !this.ctx) return;
       try {
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = 'triangle';
@@ -154,10 +161,13 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const initAudio = () => { 
     audio.init(); 
+    if (audio.ctx && audio.ctx.state === 'suspended') {
+      audio.ctx.resume();
+    }
   };
-  document.addEventListener('click', initAudio, { once: true, capture: true });
-  document.addEventListener('wheel', initAudio, { once: true, capture: true });
-  document.addEventListener('touchstart', initAudio, { once: true, capture: true });
+  document.addEventListener('click', initAudio, { capture: true });
+  document.addEventListener('touchstart', initAudio, { capture: true });
+  document.addEventListener('keydown', initAudio, { capture: true });
 
 
   // ---------- 1. LENIS SMOOTH SCROLL ---------- //
