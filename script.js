@@ -203,21 +203,42 @@ document.addEventListener('DOMContentLoaded', () => {
   splitTextToChars('.kinetic-text-sub');
   splitTextToChars('.kinetic-text-small');
 
-  // ---------- 3. BRUTALIST LOADER ---------- //
+  // ---------- 3. BRUTALIST LOADER (ACCURATE SMOOTH INTERPOLATION) ---------- //
   const loaderCounter = document.querySelector('.loader-counter');
   const loaderProgress = document.querySelector('.loader-progress');
-  // The loader is now driven by actual 3D model loading progress
+  
+  let actualProgress = 0;
+  let displayedProgress = 0;
+
   window.updateLoaderProgress = (percent) => {
-    const val = Math.min(Math.floor(percent), 100);
-    if(loaderCounter) loaderCounter.innerText = String(val).padStart(3, '0');
-    if(loaderProgress) loaderProgress.style.width = val + "%";
-    
-    if (val >= 100 && !window.heroSequencePlayed) {
-      window.heroSequencePlayed = true;
-      // Slight delay for smoothness
-      setTimeout(playHeroSequence, 400);
-    }
+    actualProgress = Math.min(Math.floor(percent), 100);
   };
+
+  const loaderInterval = setInterval(() => {
+    if (displayedProgress < actualProgress) {
+      const diff = actualProgress - displayedProgress;
+      const step = Math.max(1, Math.min(Math.ceil(diff * 0.1), 2));
+      displayedProgress += step;
+    } else if (actualProgress === 100 && displayedProgress < 100) {
+      displayedProgress += Math.floor(Math.random() * 2) + 1;
+    }
+
+    if (displayedProgress >= 100) {
+      displayedProgress = 100;
+      clearInterval(loaderInterval);
+
+      if (loaderCounter) loaderCounter.innerText = "100";
+      if (loaderProgress) loaderProgress.style.width = "100%";
+
+      if (!window.heroSequencePlayed) {
+        window.heroSequencePlayed = true;
+        setTimeout(playHeroSequence, 400);
+      }
+    } else {
+      if (loaderCounter) loaderCounter.innerText = String(displayedProgress).padStart(3, '0');
+      if (loaderProgress) loaderProgress.style.width = displayedProgress + "%";
+    }
+  }, 16);
 
   function playHeroSequence() {
     const tl = gsap.timeline();
