@@ -392,9 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
       gsap.to(submitBtn, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 });
       
       setTimeout(() => {
-        submitBtn.innerHTML = '<span>Opening Mail Client...</span> <i data-lucide="check"></i>';
+        submitBtn.innerHTML = '<span>Payload Transmitted</span> <i data-lucide="check"></i>';
         if (window.lucide) lucide.createIcons();
-        submitBtn.style.background = "#00ffff";
+        submitBtn.style.background = "#0f0";
         submitBtn.style.color = "#000";
         
         // Directly route email to sachinyadav402107@gmail.com
