@@ -187,6 +187,24 @@ document.addEventListener('DOMContentLoaded', () => {
   gsap.ticker.add((time)=>{ lenis.raf(time * 1000); });
   gsap.ticker.lagSmoothing(0);
 
+  // Smooth scroll for all navigation & internal links
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const targetId = this.getAttribute('href');
+      if (targetId === '#' || !targetId) return;
+      const targetEl = document.querySelector(targetId);
+      if (targetEl) {
+        e.preventDefault();
+        if (audio && audio.playClick) audio.playClick();
+        if (typeof lenis !== 'undefined' && lenis) {
+          lenis.scrollTo(targetEl, { offset: -60, duration: 1.2 });
+        } else {
+          targetEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    });
+  });
+
   // ---------- 2. CUSTOM SPLIT-TEXT LOGIC (REVERSED TO KINETIC) ---------- //
   function splitTextToChars(selector) {
     const elements = document.querySelectorAll(selector);
@@ -360,25 +378,39 @@ document.addEventListener('DOMContentLoaded', () => {
   if(contactForm) {
     contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
+      const nameInput = document.getElementById('name');
+      const emailInput = document.getElementById('email');
+      const messageInput = document.getElementById('message');
+      
+      const name = nameInput ? nameInput.value.trim() : 'Anonymous';
+      const email = emailInput ? emailInput.value.trim() : 'Not provided';
+      const message = messageInput ? messageInput.value.trim() : '';
+      
       const originalText = submitBtn.innerHTML;
       submitBtn.innerHTML = '<span>Transmitting Payload...</span> <i data-lucide="loader"></i>';
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
       gsap.to(submitBtn, { scale: 0.95, duration: 0.1, yoyo: true, repeat: 1 });
       
       setTimeout(() => {
-        submitBtn.innerHTML = '<span>Payload Transmitted</span> <i data-lucide="check"></i>';
-        lucide.createIcons();
-        submitBtn.style.background = "#0f0";
+        submitBtn.innerHTML = '<span>Opening Mail Client...</span> <i data-lucide="check"></i>';
+        if (window.lucide) lucide.createIcons();
+        submitBtn.style.background = "#00ffff";
         submitBtn.style.color = "#000";
+        
+        // Directly route email to sachinyadav402107@gmail.com
+        const subject = encodeURIComponent(`[Transmission from ${name}] Portfolio Directive`);
+        const body = encodeURIComponent(`Name / Callsign: ${name}\nComm-Link / Email: ${email}\n\nPayload Message:\n${message}\n\n---\nTransmitted via Sachin Yadav Portfolio (https://sachin-0.vercel.app/)`);
+        window.location.href = `mailto:sachinyadav402107@gmail.com?subject=${subject}&body=${body}`;
+        
         contactForm.reset();
         
         setTimeout(() => {
           submitBtn.innerHTML = originalText;
           submitBtn.style.background = "";
           submitBtn.style.color = "";
-          lucide.createIcons();
-        }, 3000);
-      }, 1500);
+          if (window.lucide) lucide.createIcons();
+        }, 3500);
+      }, 1000);
     });
   }
 
