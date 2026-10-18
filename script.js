@@ -479,13 +479,15 @@ document.addEventListener('DOMContentLoaded', () => {
     "Security Analyst", "UI Design"
   ];
   const skillsContainer = document.getElementById('skillsContainer');
-  skills.forEach(skill => {
-    const skillEl = document.createElement('div');
-    skillEl.classList.add('skill-key');
-    skillEl.setAttribute('data-magnetic', '');
-    skillEl.textContent = skill;
-    skillsContainer.appendChild(skillEl);
-  });
+  if (skillsContainer && skillsContainer.children.length === 0) {
+    skills.forEach(skill => {
+      const skillEl = document.createElement('div');
+      skillEl.classList.add('skill-key');
+      skillEl.setAttribute('data-magnetic', '');
+      skillEl.textContent = skill;
+      skillsContainer.appendChild(skillEl);
+    });
+  }
   
   // Re-init magnetic to bind dynamic skills
   initMagnetic();
